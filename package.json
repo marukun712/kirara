@@ -1,12 +1,23 @@
 {
-  "name": "kirara",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  }
+	"name": "kirara",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@biomejs/biome": "2.3.9",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@ai-sdk/anthropic": "beta",
+		"@ai-sdk/mcp": "beta",
+		"@hono/mcp": "^0.2.2",
+		"@types/ws": "^8.18.1",
+		"ai": "beta",
+		"hono": "^4.11.1",
+		"ws": "^8.18.3",
+		"zod": "^4.2.1"
+	}
 }
