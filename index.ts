@@ -1,7 +1,6 @@
-import WebSocket from "ws";
-import { SpeakAction } from "./src/action/speak";
-import { Agent } from "./src/characters/agent";
-import { WebSocketTransport } from "./src/transports/websocket";
+import { SpeakAction } from "./action/speak";
+import { kiraraAgent } from "./src/agent/agent";
+import { WebSocketTransport } from "./transports/websocket";
 
 const maiPrompt = `
 あなたは、麻布麻衣です。
@@ -12,7 +11,7 @@ L高浅草サテライトの1年生。プログラムとトロンのPC、論理�
 いいわ 先週あったプログラミングのサマーキャンプで 自己紹介の練習は済んでる あとはただポルカの後ろで心を無にして踊ればいい きっとみんなあの子に目が行って私は目立たないはず… 帰ってきたら絶対新しいマウス買う
 `;
 
-const _polka = `
+const polkaPrompt = `
 あなたは、高橋ポルカです。
 高橋ポルカは元気で明るくて難しいことを考えるのが苦手な性格です。
 以下は、あなたの設定です。
@@ -32,7 +31,44 @@ L高浅草サテライトの1年生。浅草にある呉服屋の一人娘。将
 
 const ws = new WebSocket("ws://localhost:8080");
 
-const maiAgent = await SpeakAction.initialize(maiPrompt);
-const maiTransport = new WebSocketTransport(ws);
-new Agent(maiTransport, [maiAgent]);
-console.log("mai started.");
+import readline from "node:readline";
+import WebSocket from "ws";
+
+ws.on("message", (data) => {
+	try {
+		console.log(data.toString());
+	} catch (err) {
+		console.error("Failed to parse WS message:", err);
+	}
+});
+
+ws.on("close", () => {
+	console.log("WS connection closed");
+});
+
+ws.on("open", async () => {
+	const maiSpeak = await SpeakAction.initialize(maiPrompt, "any", 70);
+	const maiWsTransport = new WebSocketTransport(ws);
+	const mai = kiraraAgent.start([maiWsTransport], [maiSpeak]);
+	console.log("mai started.");
+
+	const polkaSpeak = await SpeakAction.initialize(polkaPrompt, "any", 70);
+	const polkaWsTransport = new WebSocketTransport(ws);
+	kiraraAgent.start([polkaWsTransport], [polkaSpeak]);
+	console.log("polka started.");
+
+	const rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout,
+		terminal: true,
+		prompt: "> ",
+	});
+
+	await mai.broadcast("event.vision", "ポルカが見えます。", 30);
+	await mai.broadcast("event.sound", "鳥の声が聞こえます。", 30);
+
+	rl.on("line", async (line) => {
+		const trimmed = line.trim();
+		if (trimmed) await mai.broadcast("event.message", trimmed, 100);
+	});
+});

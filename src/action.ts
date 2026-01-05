@@ -4,5 +4,5 @@ export interface Action {
 	id: string;
 	observeTarget: string;
 	minImportance: number;
-	run(message: MessageType, ...args: unknown[]): Promise<string>;
+	run(message: MessageType, ...args: unknown[]): Promise<unknown>;
 }

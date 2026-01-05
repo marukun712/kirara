@@ -1,6 +1,6 @@
 import type WebSocket from "ws";
-import { Message, type MessageType } from "../schema";
-import type { Transport } from "../transport";
+import { Message, type MessageType } from "../src/schema";
+import type { Transport } from "../src/transport";
 
 export class WebSocketTransport implements Transport {
 	name: "websocket" = "websocket";
