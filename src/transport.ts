@@ -1,6 +1,8 @@
-import type { MessageType } from "./schema/index";
+import type { ScanType } from "./schema/index";
+
 export interface Transport {
-	name: string;
-	send(data: string): Promise<void>;
-	observe(onMessage: (data: MessageType) => void): () => void;
+	scan(): Promise<ScanType[]>;
+	respond(): Promise<void>;
+	connect(): Promise<void>;
+	consume(): Promise<void>;
 }

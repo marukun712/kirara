@@ -1,7 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { ToolLoopAgent } from "ai";
-import type { Action } from "../src/action";
-import type { MessageType } from "../src/schema";
+import type { Action } from "../action";
+import type { MessageType } from "../schema";
 
 export class SpeakAction implements Action {
 	id: string;
