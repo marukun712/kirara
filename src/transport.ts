@@ -1,5 +1,6 @@
+import type { MessageType } from "./schema/index";
 export interface Transport {
 	name: string;
 	send(data: string): Promise<void>;
-	listen(onMessage: (data: string) => void): () => void;
+	observe(onMessage: (data: MessageType) => void): () => void;
 }
