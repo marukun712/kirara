@@ -1,23 +1,24 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import type { Action } from "../action";
-import type { MessageType } from "../schema";
+import type { Output } from "../schema";
 
 export class kiraraAgent {
-	private memory: string;
+	id: string;
+	memory: string;
 	private read: string[];
 	private actions: Action[];
-	private onMessage: (msg: string) => void;
 
-	constructor(actions: Action[], onMessage: (msg: string) => void) {
+	constructor(prompt: string, actions: Action[]) {
+		this.id = bytesToHex(sha256(new TextEncoder().encode(prompt)));
 		this.memory = "記憶はありません。新たに会話を始めましょう。\n";
+
 		this.read = [];
 		this.actions = actions;
-		this.onMessage = onMessage;
 	}
 
-	static start(actions: Action[], onMessage: (msg: string) => void) {
-		return new kiraraAgent(actions, onMessage);
+	static start(prompt: string, actions: Action[]) {
+		return new kiraraAgent(prompt, actions);
 	}
 
 	async input(type: string, message: string, importance: number) {
@@ -25,10 +26,10 @@ export class kiraraAgent {
 			const raw = {
 				type: type,
 				content: message,
-				importance: importance,
+				importance,
 			};
 			const hash = sha256(new TextEncoder().encode(JSON.stringify(raw)));
-			const msg: MessageType = {
+			const msg: Output = {
 				id: bytesToHex(hash),
 				...raw,
 			};
@@ -48,7 +49,6 @@ export class kiraraAgent {
 				if (this.read.includes(msg.id)) {
 					return;
 				}
-
 				this.read.push(msg.id);
 				this.output(action, msg);
 			});
@@ -57,9 +57,7 @@ export class kiraraAgent {
 		}
 	}
 
-	private async output(action: Action, msg: MessageType) {
-		const res = await action.run(msg, this.memory);
-		if (typeof res !== "string") return;
-		this.onMessage(res);
+	private async output(action: Action, msg: Output) {
+		await action.onEvent(msg);
 	}
 }

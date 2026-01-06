@@ -1,8 +1,8 @@
-import type { MessageType } from "./schema";
+import type { Message } from "./schema";
 
 export interface Action {
 	id: string;
 	observeTarget: string;
 	minImportance: number;
-	run(message: MessageType, ...args: unknown[]): Promise<unknown>;
+	onEvent(event: Message): Promise<void> | void;
 }
