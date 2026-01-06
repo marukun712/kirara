@@ -47,7 +47,7 @@ polka.respond(async (text: string) => {
 	return res.text;
 });
 
-mai.initiate(polka.id, async (text: string) => {
+mai.hello(polka.id, async (text: string) => {
 	const res = await maiAgent.generate({ prompt: text });
 	console.log(res.text);
 	return res.text;

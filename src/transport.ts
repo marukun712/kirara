@@ -68,7 +68,7 @@ export class Handshake {
 		return this.computeHash(data);
 	}
 
-	async initiate(
+	async hello(
 		targetPeerId: string,
 		generate: (text: string) => Promise<string>,
 	): Promise<boolean> {
