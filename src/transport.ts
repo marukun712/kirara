@@ -89,7 +89,10 @@ export class Handshake {
 
 		return new Promise((resolve, reject) => {
 			// 10秒でタイムアウト
-			const timeout = setTimeout(() => reject(new Error("timeout")), 15000);
+			const timeout = setTimeout(async () => {
+				await generate("相手から返答が返ってきませんでした。");
+				reject(false);
+			}, 15000);
 
 			const handler = async (msg: string) => {
 				try {
@@ -107,7 +110,8 @@ export class Handshake {
 
 						if (expectedHash !== validated.hash) {
 							clearTimeout(timeout);
-							reject(new Error("Hash mismatch in SYN-ACK"));
+							await generate("相手から返答が返ってきませんでした。");
+							reject(false);
 							return;
 						}
 
@@ -140,8 +144,6 @@ export class Handshake {
 	}
 
 	async respond(generate: (text: string) => Promise<string>): Promise<boolean> {
-		let synMessage: SYN | null = null;
-
 		return new Promise((resolve, reject) => {
 			const handler = async (msg: string) => {
 				try {
@@ -150,13 +152,12 @@ export class Handshake {
 
 					// SYN を受信
 					if (validated.type === "SYN" && validated.to === this.id) {
-						synMessage = validated;
-
 						// ハッシュ検証
 						const expectedHash = await this.concatHash(null, validated.payload);
 
 						if (expectedHash !== validated.hash) {
-							reject(new Error("Hash mismatch in SYN"));
+							await generate("相手から不正な返答が返ってきました。");
+							reject(false);
 							return;
 						}
 
@@ -176,14 +177,7 @@ export class Handshake {
 						};
 
 						await this.transport.send(JSON.stringify(synAckMessage));
-					}
-					// ACK を受信
-					else if (
-						validated.type === "ACK" &&
-						validated.to === this.id &&
-						synMessage &&
-						validated.from === synMessage.from
-					) {
+
 						resolve(true);
 					}
 				} catch (error) {
