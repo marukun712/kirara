@@ -6,13 +6,13 @@ import type { Transport } from "../transport";
 
 export class kiraraAgent {
 	id: string;
-	memory: string;
+	shortMemory: string;
 	private read: string[];
 	private actions: Action[];
 
 	constructor(prompt: string, actions: Action[]) {
 		this.id = bytesToHex(sha256(new TextEncoder().encode(prompt)));
-		this.memory = "記憶はありません。新たに会話を始めましょう。\n";
+		this.shortMemory = "記憶はありません。新たに会話を始めましょう。\n";
 
 		this.read = [];
 		this.actions = actions;
@@ -34,7 +34,7 @@ export class kiraraAgent {
 				id: bytesToHex(hash),
 				...raw,
 			};
-			this.memory += `${msg.content}\n`;
+			this.shortMemory += `${msg.content}\n`;
 			this.actions.forEach((action) => {
 				if (
 					!action.observeTarget.includes("*") &&
@@ -59,7 +59,7 @@ export class kiraraAgent {
 	}
 
 	private async output(action: Action, msg: Output) {
-		await action.onEvent(msg, this.memory);
+		await action.onEvent(msg, this.shortMemory);
 	}
 
 	attachTransport(transport: Transport) {

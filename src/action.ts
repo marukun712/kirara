@@ -59,3 +59,21 @@ export class SpeakAction implements Action {
 		);
 	}
 }
+
+export class LongMemoryAction implements Action {
+	id = "Long-Memory";
+	observeTarget = ["*"];
+	minImportance = 1;
+
+	private generateFn: (text: string) => Promise<string>;
+
+	constructor(generateFn: (text: string) => Promise<string>) {
+		this.generateFn = generateFn;
+	}
+
+	async onEvent(event: Output, memory: string): Promise<void> {
+		await this.generateFn(
+			`与えられた入力: ${event.content}\n今までの記憶: ${memory}\nこれらの記憶の中から、大事だと思う情報をカテゴリ分けしてMarkdownで出力してください。`,
+		);
+	}
+}

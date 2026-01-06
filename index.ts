@@ -1,6 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { ToolLoopAgent } from "ai";
-import { HandshakeAction, SpeakAction } from "./src/action";
+import { HandshakeAction, LongMemoryAction, SpeakAction } from "./src/action";
 import { kiraraAgent } from "./src/agent/agent";
 import { Handshake } from "./src/transport";
 import { WebSocketTransport } from "./src/transport/websocket";
@@ -14,7 +14,7 @@ type CharacterConfig = {
 };
 
 const characters = {
-	mai: {
+	tomari: {
 		name: "鬼塚冬毬",
 		prompt: `
       あなたは、鬼塚冬毬です。
@@ -27,7 +27,7 @@ const characters = {
       重要:出力はキャラクターの発話する短い文章のみにしてください。
     `,
 	},
-	polka: {
+	wien: {
 		name: "ウィーン・マルガレーテ",
 		prompt: `
       あなたは、ウィーン・マルガレーテです。
@@ -67,15 +67,23 @@ function createCharacter(config: CharacterConfig) {
 		return res.text;
 	});
 
-	const kirara = new kiraraAgent(config.prompt, [handShakeAction, speakAction]);
+	const memoryAction = new LongMemoryAction(async (text: string) => {
+		const res = await agent.generate({ prompt: text });
+		console.log(`[${config.name}]`, res.text);
+		return res.text;
+	});
+
+	const kirara = new kiraraAgent(config.prompt, [
+		handShakeAction,
+		speakAction,
+		memoryAction,
+	]);
 	kirara.attachTransport(transport);
 
 	return kirara;
 }
 
-const agent1 = createCharacter(characters.mai);
-const agent2 = createCharacter(characters.polka);
+const agent1 = createCharacter(characters.tomari);
+const agent2 = createCharacter(characters.wien);
 
-agent1.input("event.listen", "桜の木が爆発している音が聞こえます。", 50);
-agent1.input("event.vision", "桜が見えます。", 100);
 agent1.input("handshake.hello", agent2.id, 1);
