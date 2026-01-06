@@ -1,11 +1,11 @@
-import { google } from "@ai-sdk/google";
+import { anthropic } from "@ai-sdk/anthropic";
 import { ToolLoopAgent } from "ai";
-import { HandshakeAction } from "./src/action";
+import { HandshakeAction, SpeakAction } from "./src/action";
 import { kiraraAgent } from "./src/agent/agent";
 import { Handshake } from "./src/transport";
 import { WebSocketTransport } from "./src/transport/websocket";
 
-const MODEL = google("gemini-3-flash-preview");
+const MODEL = anthropic("claude-3-5-haiku-latest");
 const WS_ENDPOINT = "ws://localhost:8080";
 
 type CharacterConfig = {
@@ -52,19 +52,30 @@ function createCharacter(config: CharacterConfig) {
 	const transport = new WebSocketTransport(WS_ENDPOINT);
 	const handshake = new Handshake(transport, config.prompt);
 
-	const action = new HandshakeAction(handshake, async (text: string) => {
+	const handShakeAction = new HandshakeAction(
+		handshake,
+		async (text: string) => {
+			const res = await agent.generate({ prompt: text });
+			console.log(`[${config.name}]`, res.text);
+			return res.text;
+		},
+	);
+
+	const speakAction = new SpeakAction(async (text: string) => {
 		const res = await agent.generate({ prompt: text });
 		console.log(`[${config.name}]`, res.text);
 		return res.text;
 	});
 
-	const kirara = new kiraraAgent(config.prompt, [action]);
+	const kirara = new kiraraAgent(config.prompt, [handShakeAction, speakAction]);
 	kirara.attachTransport(transport);
 
 	return kirara;
 }
 
-const mai = createCharacter(characters.mai);
-const polka = createCharacter(characters.polka);
+const agent1 = createCharacter(characters.mai);
+const agent2 = createCharacter(characters.polka);
 
-mai.input("handshake.hello", polka.id, 100);
+agent1.input("event.listen", "桜の木が爆発している音が聞こえます。", 50);
+agent1.input("event.vision", "桜が見えます。", 100);
+agent1.input("handshake.hello", agent2.id, 1);

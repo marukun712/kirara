@@ -36,7 +36,10 @@ export class kiraraAgent {
 			};
 			this.memory += `${msg.content}\n`;
 			this.actions.forEach((action) => {
-				if (!action.observeTarget.includes(msg.type)) {
+				if (
+					!action.observeTarget.includes("*") &&
+					!action.observeTarget.includes(msg.type)
+				) {
 					return;
 				}
 
@@ -56,7 +59,7 @@ export class kiraraAgent {
 	}
 
 	private async output(action: Action, msg: Output) {
-		await action.onEvent(msg);
+		await action.onEvent(msg, this.memory);
 	}
 
 	attachTransport(transport: Transport) {
@@ -64,11 +67,11 @@ export class kiraraAgent {
 			try {
 				const msg = JSON.parse(data);
 				if (msg.type === "SYN") {
-					this.input("handshake.syn", JSON.stringify(msg), 100);
+					this.input("handshake.syn", JSON.stringify(msg), 1);
 				} else if (msg.type === "SYN-ACK") {
-					this.input("handshake.syn_ack", JSON.stringify(msg), 100);
+					this.input("handshake.syn_ack", JSON.stringify(msg), 1);
 				} else if (msg.type === "ACK") {
-					this.input("handshake.ack", JSON.stringify(msg), 100);
+					this.input("handshake.ack", JSON.stringify(msg), 1);
 				}
 			} catch (err) {
 				console.error(err);

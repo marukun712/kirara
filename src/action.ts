@@ -5,13 +5,13 @@ export interface Action {
 	id: string;
 	observeTarget: string[];
 	minImportance: number;
-	onEvent(event: Output): Promise<void> | void;
+	onEvent(event: Output, memory: string): Promise<void> | void;
 }
 
 export class HandshakeAction implements Action {
 	id = "handshake";
 	observeTarget = ["handshake.hello", "handshake.syn"];
-	minImportance = 100;
+	minImportance = 1;
 
 	private handshake: Handshake;
 	private generateFn: (text: string) => Promise<string>;
@@ -39,5 +39,23 @@ export class HandshakeAction implements Action {
 		} catch (e) {
 			console.error(e);
 		}
+	}
+}
+
+export class SpeakAction implements Action {
+	id = "speak";
+	observeTarget = ["*"];
+	minImportance = 70;
+
+	private generateFn: (text: string) => Promise<string>;
+
+	constructor(generateFn: (text: string) => Promise<string>) {
+		this.generateFn = generateFn;
+	}
+
+	async onEvent(event: Output, memory: string): Promise<void> {
+		await this.generateFn(
+			`与えられた入力: ${event.content}\n今までの記憶: ${memory}`,
+		);
 	}
 }
