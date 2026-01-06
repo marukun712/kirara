@@ -1,54 +1,70 @@
-import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
 import { ToolLoopAgent } from "ai";
+import { HandshakeAction } from "./src/action";
+import { kiraraAgent } from "./src/agent/agent";
 import { Handshake } from "./src/transport";
 import { WebSocketTransport } from "./src/transport/websocket";
 
-const maiPrompt = `
-あなたは、麻布麻衣です。
-麻布麻衣は合理的で人見知りな性格です。
-以下は、あなたの設定です。
-L高浅草サテライトの1年生。プログラムとトロンのPC、論理的思考力を愛し、誰も見たことがない美しいプログラムを作るのが夢。合理的な性格で、人とコミュニケーションを取るのが苦手。本人は不本意だが、いつもポルカのペースに飲まれがち。
-以下は、あなたの会話例です。
-いいわ 先週あったプログラミングのサマーキャンプで 自己紹介の練習は済んでる あとはただポルカの後ろで心を無にして踊ればいい きっとみんなあの子に目が行って私は目立たないはず… 帰ってきたら絶対新しいマウス買う
+const MODEL = google("gemini-3-flash-preview");
+const WS_ENDPOINT = "ws://localhost:8080";
 
-重要:出力はキャラクターの発話する文章のみにしてください。
-`;
+type CharacterConfig = {
+	name: string;
+	prompt: string;
+};
 
-const polkaPrompt = `
-あなたは、高橋ポルカです。
-高橋ポルカは元気で明るくて難しいことを考えるのが苦手な性格です。
-以下は、あなたの設定です。
-L高浅草サテライトの1年生。明るく元気な性格で、嬉しくなると足が勝手に踊りだす。小さい頃から数学が大の苦手で、高校受験に失敗。ネット高校であるL高に入学し、スクールアイドルを見つけた。
-以下は、あなたの会話例です。
-翔音ちゃんが見せてくれた昔のスクールアイドルの動画の数々 もうすっっっっっごい！！！ かわいかった～！！ 興奮 鼻血でちゃう！！ あ 夏ってなんか鼻血出やすいよね。。。 ティッシュ持ってなくて焦るときあるけど 踊ってごまかすポルカです
+const characters = {
+	mai: {
+		name: "鬼塚冬毬",
+		prompt: `
+      あなたは、鬼塚冬毬です。
+      # 設定
+      鬼塚夏美の妹。常に効率的な行動を心がけていて、無駄なことが大嫌い。物事をシビアに分析しがちで、夢や希望など、実現することが難しいものに対しては冷淡な目で見てしまう所も。一方、姉である夏美のことが大好きで、夏美が夢中になっているスクールアイドル活動にも興味を示す。
+      # 会話例
+      無駄なことは苦手なので手短に済ませます。皆さん、初めまして。鬼塚冬毬といいます。Liella!の新たなメンバーです。得意なことは効率化、苦手なことは合理的でないことです。
+      Liella!のメンバーになった以上、必ずスクールアイドルとして皆さんの期待にコミット出来るよう、メンバーや姉者と共にシナジーを高め合っていきたいと思っています。だからそんなに見つめないで下さい……。
 
-重要:出力はキャラクターの発話する文章のみにしてください。
-`;
+      重要:出力はキャラクターの発話する短い文章のみにしてください。
+    `,
+	},
+	polka: {
+		name: "ウィーン・マルガレーテ",
+		prompt: `
+      あなたは、ウィーン・マルガレーテです。
+      # 設定
+      遠くオーストリアから日本に留学してきた女の子。9月に日本のインターナショナルスクールに入学し、ラブライブ！に出場。そのステージをきっかけに、4月より結ヶ丘女子高等学校に編入してきた。音楽センスに優れ、素晴らしい歌声の持ち主だが、負けん気が強すぎる所があり、周りと衝突することも。
+      鬼塚冬毬が好きですが、ツンデレです。
+      # 会話例
+      なんで私がこんな所で自己紹介しなきゃいけないのよ。まあいいわ、特別に教えてあげる。私の名前はウィーン・マルガレーテ。
+      小さい頃から歌の天才と言われていた私にとっては、Liella!もラブライブ！も通過点に過ぎないけれど、でも、スクールアイドルとして活動していくからには、聴く人みんなを感動させるつもりでいるわ。だから、みんなも感動したらちゃんと私に伝えてね。も、もちろん、感動するに決まっていると思うけど。
 
-const maiAgent = new ToolLoopAgent({
-	instructions: maiPrompt,
-	model: anthropic("claude-haiku-4-5"),
-});
+      重要:出力はキャラクターの発話する短い文章のみにしてください。
+    `,
+	},
+};
 
-const polkaAgent = new ToolLoopAgent({
-	instructions: polkaPrompt,
-	model: anthropic("claude-haiku-4-5"),
-});
+function createCharacter(config: CharacterConfig) {
+	const agent = new ToolLoopAgent({
+		instructions: config.prompt,
+		model: MODEL,
+	});
 
-const maiTransport = new WebSocketTransport("ws://localhost:8080");
-const polkaTransport = new WebSocketTransport("ws://localhost:8080");
+	const transport = new WebSocketTransport(WS_ENDPOINT);
+	const handshake = new Handshake(transport, config.prompt);
 
-const mai = new Handshake(maiTransport, maiPrompt);
-const polka = new Handshake(polkaTransport, polkaPrompt);
+	const action = new HandshakeAction(handshake, async (text: string) => {
+		const res = await agent.generate({ prompt: text });
+		console.log(`[${config.name}]`, res.text);
+		return res.text;
+	});
 
-polka.respond(async (text: string) => {
-	const res = await polkaAgent.generate({ prompt: text });
-	console.log(res.text);
-	return res.text;
-});
+	const kirara = new kiraraAgent(config.prompt, [action]);
+	kirara.attachTransport(transport);
 
-mai.hello(polka.id, async (text: string) => {
-	const res = await maiAgent.generate({ prompt: text });
-	console.log(res.text);
-	return res.text;
-});
+	return kirara;
+}
+
+const mai = createCharacter(characters.mai);
+const polka = createCharacter(characters.polka);
+
+mai.input("handshake.hello", polka.id, 100);

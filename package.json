@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "beta",
+		"@ai-sdk/google": "^3.0.3",
 		"@ai-sdk/mcp": "beta",
 		"@hono/mcp": "^0.2.2",
 		"@mcpc-tech/mcp-sampling-ai-provider": "^0.1.13",

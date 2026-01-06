@@ -2,6 +2,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import type { Action } from "../action";
 import type { Output } from "../schema";
+import type { Transport } from "../transport";
 
 export class kiraraAgent {
 	id: string;
@@ -35,10 +36,7 @@ export class kiraraAgent {
 			};
 			this.memory += `${msg.content}\n`;
 			this.actions.forEach((action) => {
-				if (
-					msg.type !== action.observeTarget &&
-					action.observeTarget !== "any"
-				) {
+				if (!action.observeTarget.includes(msg.type)) {
 					return;
 				}
 
@@ -59,5 +57,22 @@ export class kiraraAgent {
 
 	private async output(action: Action, msg: Output) {
 		await action.onEvent(msg);
+	}
+
+	attachTransport(transport: Transport) {
+		transport.onMessage((data) => {
+			try {
+				const msg = JSON.parse(data);
+				if (msg.type === "SYN") {
+					this.input("handshake.syn", JSON.stringify(msg), 100);
+				} else if (msg.type === "SYN-ACK") {
+					this.input("handshake.syn_ack", JSON.stringify(msg), 100);
+				} else if (msg.type === "ACK") {
+					this.input("handshake.ack", JSON.stringify(msg), 100);
+				}
+			} catch (err) {
+				console.error(err);
+			}
+		});
 	}
 }

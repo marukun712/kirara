@@ -111,6 +111,7 @@ export class Handshake {
 						if (expectedHash !== validated.hash) {
 							clearTimeout(timeout);
 							await generate("相手から返答が返ってきませんでした。");
+							console.error(new Error("Hash mismatch"));
 							reject(false);
 							return;
 						}
@@ -134,8 +135,9 @@ export class Handshake {
 						resolve(true);
 					}
 				} catch (error) {
+					console.error(error);
 					clearTimeout(timeout);
-					reject(error);
+					reject(false);
 				}
 			};
 
@@ -143,49 +145,44 @@ export class Handshake {
 		});
 	}
 
-	async respond(generate: (text: string) => Promise<string>): Promise<boolean> {
-		return new Promise((resolve, reject) => {
-			const handler = async (msg: string) => {
-				try {
-					const parsed = JSON.parse(msg);
-					const validated = MessageSchema.parse(parsed);
+	async respond(
+		generate: (text: string) => Promise<string>,
+		validated: SYN,
+	): Promise<boolean> {
+		try {
+			// SYN を受信
+			if (validated.type === "SYN" && validated.to === this.id) {
+				// ハッシュ検証
+				const expectedHash = await this.concatHash(null, validated.payload);
 
-					// SYN を受信
-					if (validated.type === "SYN" && validated.to === this.id) {
-						// ハッシュ検証
-						const expectedHash = await this.concatHash(null, validated.payload);
-
-						if (expectedHash !== validated.hash) {
-							await generate("相手から不正な返答が返ってきました。");
-							reject(false);
-							return;
-						}
-
-						const response = await generate(
-							`人から${validated.payload}と話しかけられました。あなたとして返答しましょう。`,
-						);
-
-						// SYN-ACK を送信
-						const synAckHash = await this.concatHash(validated.hash, response);
-
-						const synAckMessage: SYNACK = {
-							type: "SYN-ACK",
-							from: this.id,
-							to: validated.from,
-							payload: response,
-							hash: synAckHash,
-						};
-
-						await this.transport.send(JSON.stringify(synAckMessage));
-
-						resolve(true);
-					}
-				} catch (error) {
-					reject(error);
+				if (expectedHash !== validated.hash) {
+					await generate("相手から不正な返答が返ってきました。");
+					return false;
 				}
-			};
 
-			this.transport.onMessage(handler);
-		});
+				const response = await generate(
+					`人から${validated.payload}と話しかけられました。あなたとして返答しましょう。`,
+				);
+
+				// SYN-ACK を送信
+				const synAckHash = await this.concatHash(validated.hash, response);
+
+				const synAckMessage: SYNACK = {
+					type: "SYN-ACK",
+					from: this.id,
+					to: validated.from,
+					payload: response,
+					hash: synAckHash,
+				};
+
+				await this.transport.send(JSON.stringify(synAckMessage));
+
+				return true;
+			}
+		} catch (e) {
+			console.error(e);
+			return false;
+		}
+		return false;
 	}
 }
