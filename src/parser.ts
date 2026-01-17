@@ -4,43 +4,40 @@ import { getKana } from "./kana";
 
 type TextToken = { type: "text"; value: string[] };
 type LongToken = { type: "long"; value: number };
-type StopToken = { type: "stop"; value: number };
-type GlueToken = { type: "glue"; value: boolean };
 type UpToken = { type: "up"; value: number };
 type DownToken = { type: "down"; value: number };
-type PauseToken = { type: "pause"; value: number };
 type StrongToken = { type: "strong"; value: JeffersonToken[] };
 type SmallToken = { type: "small"; value: JeffersonToken[] };
 type FastToken = { type: "fast"; value: JeffersonToken[] };
 type SlowToken = { type: "slow"; value: JeffersonToken[] };
+type GlueToken = { type: "glue"; value: boolean };
+type PauseToken = { type: "pause"; value: number };
 type BracketToken = { type: "bracket"; value: JeffersonToken[] };
 
 export type JeffersonToken =
 	| TextToken
 	| LongToken
-	| StopToken
-	| GlueToken
 	| UpToken
 	| DownToken
-	| PauseToken
 	| SmallToken
 	| StrongToken
 	| FastToken
 	| SlowToken
+	| GlueToken
+	| PauseToken
 	| BracketToken;
 
 type MoraData = {
 	mora?: string;
 	long?: number;
-	stop?: number;
-	glue?: boolean;
 	up?: number;
 	down?: number;
-	pause?: number;
 	small?: boolean;
 	strong?: boolean;
 	fast?: boolean;
 	slow?: boolean;
+	glue?: boolean;
+	pause?: number;
 	bracket?: boolean;
 };
 
@@ -85,15 +82,6 @@ export class JeffersonParser {
 				}
 				i--;
 				tokens.push({ type: "long", value: count });
-			} else if (char === "-") {
-				await pushText();
-				tokens.push({ type: "pause", value: 1 });
-			} else if (char === "=") {
-				await pushText();
-				tokens.push({ type: "glue", value: true });
-			} else if (char === ".") {
-				await pushText();
-				tokens.push({ type: "pause", value: 1 });
 			} else if (char === ",") {
 				await pushText();
 				tokens.push({ type: "down", value: 1 });
@@ -180,6 +168,15 @@ export class JeffersonParser {
 					});
 				}
 				i = j;
+			} else if (char === "=") {
+				await pushText();
+				tokens.push({ type: "glue", value: true });
+			} else if (char === "-") {
+				await pushText();
+				tokens.push({ type: "pause", value: 1 });
+			} else if (char === ".") {
+				await pushText();
+				tokens.push({ type: "pause", value: 1 });
 			} else if (char === "[") {
 				await pushText();
 				let j = i + 1;
@@ -219,14 +216,6 @@ function flatten(tokens: JeffersonToken[]): MoraData[] {
 				last.long = token.value;
 				result.push(last);
 			}
-		} else if (token.type === "stop") {
-			const last = result.pop();
-			if (last) {
-				last.stop = token.value;
-				result.push(last);
-			}
-		} else if (token.type === "glue") {
-			result.push({ glue: token.value });
 		} else if (token.type === "up") {
 			const last = result.pop();
 			if (last) {
@@ -239,8 +228,6 @@ function flatten(tokens: JeffersonToken[]): MoraData[] {
 				last.down = token.value;
 				result.push(last);
 			}
-		} else if (token.type === "pause") {
-			result.push({ pause: token.value });
 		} else if (token.type === "small") {
 			const nested = flatten(token.value);
 			nested.forEach((item) => {
@@ -263,6 +250,16 @@ function flatten(tokens: JeffersonToken[]): MoraData[] {
 			const nested = flatten(token.value);
 			nested.forEach((item) => {
 				item.slow = true;
+				result.push(item);
+			});
+		} else if (token.type === "pause") {
+			result.push({ pause: token.value });
+		} else if (token.type === "glue") {
+			result.push({ glue: token.value });
+		} else if (token.type === "bracket") {
+			const nested = flatten(token.value);
+			nested.forEach((item) => {
+				item.bracket = true;
 				result.push(item);
 			});
 		}
@@ -315,6 +312,8 @@ const play = async (buf: ArrayBuffer) => {
 for (const line of result) {
 	const query = await client.createAudioQuery(line.text, 107);
 	const data = flatten(line.tokens);
+
+	console.log(data);
 
 	query.intonationScale = 1.3;
 	query.speedScale = 1.2;
