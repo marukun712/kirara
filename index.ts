@@ -1,5 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
+import { playConversation } from "./src/parser";
 
 const res = await generateText({
 	prompt: `
@@ -31,13 +32,12 @@ const res = await generateText({
 - 役割: ボケ/ツッコミ/加速/調停
 - 一人が複数の役割を持ってもよい
 
-最重要:Jefferson転写記号で、会話文に音声的な特徴を与えてください。
-
 # 例
 
 [kyoko]:あ、そういえば今日購買でプリン売ってたよ.
-[aya]:_プリン_:[いいね:::].
+[aya]:_プリン_:いいね:::.
 [kyoko]:[ねー].
+[aya]:[ねー].
 [kyoko]:(5)プリンってさ、プリッとしてるから_プリン_なのかな.
 [natsumi]:知らんよ.
 [aya]:あ、でも_ぷるぷる_だから_プルン_じゃなくて_プリン_なのか.
@@ -59,7 +59,7 @@ const res = await generateText({
 [natsumi]:(2)嫌な予感がする.
 [kyoko]:教える科目の本だから_教科書_でしょ?.
 [aya]:そうだね、教科書だね.
-[kyoko]:じゃあ、私たちがこれを枕にして寝たら=
+[kyoko]:じゃあ、>私たちがこれを枕にして寝たら<=
 [aya]:=<安眠書になっちゃう>!?.
 [kyoko]:[そう!].
 [aya]:[すごーい!].
@@ -67,18 +67,18 @@ const res = await generateText({
 [kyoko]:じゃあ、なつみちゃんがこれで誰かを叩いたら=
 [aya]:=<鈍器書になっちゃう>!?.
 [natsumi]:(2)物騒なんだよ.
-[kyoko]:=でも、漢字は漢字で=
+[kyoko]:でも、漢字は漢字で=
 [aya]:=漢字は漢字だよね
 [kyoko]:書いてある.
 [natsumi]:(5)その話さっき終わっただろ.
 
 [kyoko]:あー.
 [aya]:どうしたの?そんなに、消しゴム、見つめて.
-[kyoko]:これさー、消しゴムって言うけどさ、[使うと]
-[aya]:[うん]
+[kyoko]:これさー、消しゴムって言うけどさ、使うと
 [kyoko]:ゴム自体は、増えてない?
-[natsumi]:(3)は?
-[kyoko]:だって、消すと、カスが出るじゃん↑.>_消してるのに、物質的には、増えてる気がする_<.=
+[natsumi]:[は?]
+[aya]:[え?]
+[kyoko]:だって、消すと、カスが出るじゃん↑._消してるのに、物質的には、増えてる気がする_.=
 [aya]:=>あー!わかるかも::!<消しカス、集めると結構な量になるもんね.
 [natsumi]:(.)減ってるから.本体.
 [kyoko]:えー、でもさー-
@@ -88,8 +88,12 @@ const res = await generateText({
 [kyoko]:それだ:::!エコだね.
 
 # 1ブロックのトランスクリプトを生成してください。トランスクリプト以外の文字は不要です。
+
+最重要:Jefferson転写記号で、会話文に音声的な特徴を与えてください。
+特に長音、二人でのオーバーラップを意識してください。
 `,
 	model: anthropic("claude-haiku-4-5"),
 });
 
 console.log(res.text);
+await playConversation(res.text);

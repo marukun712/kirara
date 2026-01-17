@@ -46,10 +46,12 @@ export class JeffersonParser {
 		const lines = text.trim().split("\n");
 		const map = await Promise.all(
 			lines.map(async (line) => {
+				const character = line.split("]:")[0];
 				const content = line.split("]:")[1];
 				if (!content) return null;
 				const cleanedContent = content.replace(/\([^)]*\)/g, "");
 				return {
+					character: character,
 					text: cleanedContent.replace(/[[\]().,?↑↓°_<>:h=\-/]/g, "").trim(),
 					tokens: await this.tokenizeJefferson(content),
 				};
@@ -268,102 +270,98 @@ function flatten(tokens: JeffersonToken[]): MoraData[] {
 	return result;
 }
 
-const text = `
-[kyoko]:あ、そういえば、教科書ってさ:::
-[natsumi]:(2)嫌な予感がする.
-[kyoko]:教える科目の本だから_教科書_でしょ?.
-[aya]:そうだね、教科書だね.
-[kyoko]:じゃあ、>私たちがこれを枕にして寝たら<=
-[aya]:=<安眠書になっちゃう>!?.
-[kyoko]:[そう!].
-[aya]:[すごーい!].
-[natsumi]:=なんねーよ.
-[kyoko]:じゃあ、なつみちゃんがこれで誰かを叩いたら=
-[aya]:=<鈍器書になっちゃう>!?.
-[natsumi]:(2)物騒なんだよ.
-[kyoko]:=でも、漢字は漢字で=
-[aya]:=漢字は漢字だよね
-[kyoko]:書いてある.
-[natsumi]:(5)その話さっき終わっただろ.
-`;
+export async function playConversation(text: string, enable = true) {
+	const client = new Client("http://127.0.0.1:50021");
+	const parser = new JeffersonParser();
+	const result = await parser.parse(text);
 
-const client = new Client("http://127.0.0.1:50021");
-const parser = new JeffersonParser();
-const result = await parser.parse(text);
+	const play = async (buf: ArrayBuffer) => {
+		await new Promise<void>((resolve) => {
+			const p = spawn("ffplay", [
+				"-autoexit",
+				"-nodisp",
+				"-loglevel",
+				"quiet",
+				"-",
+			]);
 
-const bufs: ArrayBuffer[] = [];
-
-const play = async (buf: ArrayBuffer) => {
-	await new Promise<void>((resolve) => {
-		const p = spawn("ffplay", [
-			"-autoexit",
-			"-nodisp",
-			"-loglevel",
-			"quiet",
-			"-",
-		]);
-
-		p.stdin.write(Buffer.from(buf));
-		p.stdin.end();
-		p.on("close", () => resolve());
-	});
-};
-
-for (const line of result) {
-	const query = await client.createAudioQuery(line.text, 107);
-	const data = flatten(line.tokens);
-
-	console.log(data);
-
-	query.intonationScale = 1.3;
-	query.speedScale = 1.2;
-
-	let moraIndex = 0;
-	query.accentPhrases.forEach((phrase) => {
-		phrase.moras.forEach((mora) => {
-			if (moraIndex >= data.length) return;
-			const d = data[moraIndex];
-			if (!d) return;
-
-			if (d.long) {
-				mora.vowel_length += d.long * 0.05;
-			}
-
-			if (d.fast) {
-				mora.vowel_length *= 0.85;
-			}
-
-			if (d.slow) {
-				mora.vowel_length *= 1.5;
-			}
-
-			if (d.small) {
-				mora.vowel_length = Math.max(0.05, mora.vowel_length * 0.65);
-				mora.pitch -= 0.25;
-			}
-
-			if (d.strong) {
-				if (mora.consonant_length !== undefined) {
-					mora.consonant_length *= 2;
-				}
-				mora.vowel_length *= 1.3;
-			}
-
-			if (d.up) {
-				mora.pitch += d.up * 0.07;
-			}
-
-			if (d.down) {
-				mora.pitch -= d.down * 0.07;
-			}
-
-			moraIndex++;
+			p.stdin.write(Buffer.from(buf));
+			p.stdin.end();
+			p.on("close", () => resolve());
 		});
-	});
+	};
 
-	bufs.push(await query.synthesis(107));
-}
+	const bufs: { audio: ArrayBuffer; data: MoraData[] }[] = [];
 
-for await (const buf of bufs) {
-	await play(buf);
+	for (const line of result) {
+		const data = flatten(line.tokens);
+
+		let speaker: number;
+		switch (`${line.character}]`) {
+			case "[kyoko]":
+				speaker = 107;
+				break;
+			case "[aya]":
+				speaker = 102;
+				break;
+			case "[natsumi]":
+				speaker = 90;
+				break;
+			default:
+				speaker = 107;
+		}
+
+		const query = await client.createAudioQuery(line.text, speaker);
+		query.intonationScale = 1.3;
+		query.speedScale = 1.2;
+
+		let dataIndex = 0;
+
+		query.accentPhrases.forEach((phrase) => {
+			phrase.moras.forEach((mora) => {
+				if (!enable) return;
+				while (dataIndex < data.length && !data[dataIndex]?.mora) {
+					dataIndex++;
+				}
+				if (dataIndex >= data.length) return;
+				const d = data[dataIndex];
+				if (!d) return;
+				if (d.long) mora.vowel_length += d.long * 0.05;
+				if (d.fast) mora.vowel_length *= 0.85;
+				if (d.slow) mora.vowel_length *= 1.5;
+				if (d.small) {
+					mora.vowel_length = Math.max(0.05, mora.vowel_length * 0.65);
+					mora.pitch -= 0.25;
+				}
+				if (d.strong) {
+					if (mora.consonant_length !== undefined) mora.consonant_length *= 2;
+					mora.vowel_length *= 1.3;
+				}
+				if (d.up) mora.pitch += d.up * 0.07;
+				if (d.down) mora.pitch -= d.down * 0.07;
+				if (d.glue) phrase.pause_mora.vowel_length = 0;
+
+				dataIndex++;
+			});
+		});
+
+		bufs.push({
+			audio: await query.synthesis(speaker),
+			data,
+		});
+	}
+
+	for (let i = 0; i < bufs.length; i++) {
+		const buf = bufs[i];
+		const next = bufs[i + 1];
+		if (!buf) continue;
+		const hasBracket = buf.data.some((d) => d.bracket);
+		const nextBracket = next?.data.some((d) => d.bracket);
+		if (hasBracket && next && nextBracket && enable) {
+			await Promise.all([play(buf.audio), play(next.audio)]);
+			i++;
+		} else {
+			await play(buf.audio);
+		}
+	}
 }
