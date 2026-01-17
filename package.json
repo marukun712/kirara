@@ -13,14 +13,10 @@
 	"dependencies": {
 		"@ai-sdk/anthropic": "beta",
 		"@ai-sdk/google": "^3.0.3",
-		"@ai-sdk/mcp": "beta",
-		"@hono/mcp": "^0.2.2",
-		"@mcpc-tech/mcp-sampling-ai-provider": "^0.1.13",
-		"@noble/hashes": "^2.0.1",
 		"@types/ws": "^8.18.1",
 		"ai": "beta",
-		"hono": "^4.11.1",
-		"multiformats": "^13.4.2",
+		"speaker": "^0.5.5",
+		"voicevox-client": "^0.3.1",
 		"ws": "^8.18.3",
 		"zod": "^4.2.1"
 	}

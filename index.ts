@@ -1,89 +1,74 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { ToolLoopAgent } from "ai";
-import { HandshakeAction, LongMemoryAction, SpeakAction } from "./src/action";
-import { kiraraAgent } from "./src/agent/agent";
-import { Handshake } from "./src/transport";
-import { WebSocketTransport } from "./src/transport/websocket";
+import { generateText } from "ai";
 
-const MODEL = anthropic("claude-3-5-haiku-latest");
-const WS_ENDPOINT = "ws://localhost:8080";
+const res = await generateText({
+	prompt: `
+日常系アニメのような三人の女子高生による会話文を生成してください。
+登場人物は[kyoko](ボケ)(口調:元気), [aya](マイペース)(口調:お嬢様), [natsumi](ツッコミ)(口調:ツッコミ)です。
+一人称は全員「私」です。
 
-type CharacterConfig = {
-	name: string;
-	prompt: string;
-};
+# アニメ風日常会話の生成ルール
 
-const characters = {
-	tomari: {
-		name: "鬼塚冬毬",
-		prompt: `
-      あなたは、鬼塚冬毬です。
-      # 設定
-      鬼塚夏美の妹。常に効率的な行動を心がけていて、無駄なことが大嫌い。物事をシビアに分析しがちで、夢や希望など、実現することが難しいものに対しては冷淡な目で見てしまう所も。一方、姉である夏美のことが大好きで、夏美が夢中になっているスクールアイドル活動にも興味を示す。
-      # 会話例
-      無駄なことは苦手なので手短に済ませます。皆さん、初めまして。鬼塚冬毬といいます。Liella!の新たなメンバーです。得意なことは効率化、苦手なことは合理的でないことです。
-      Liella!のメンバーになった以上、必ずスクールアイドルとして皆さんの期待にコミット出来るよう、メンバーや姉者と共にシナジーを高め合っていきたいと思っています。だからそんなに見つめないで下さい……。
+## 基本構造
+- 1発言は1-3文、30文字以内を目安とする
+- 情報提示->反応->展開のサイクルを維持
+- 5-15ターンで1つの話題を完結させる
 
-      重要:出力はキャラクターの発話する短い文章のみにしてください。
-    `,
-	},
-	wien: {
-		name: "ウィーン・マルガレーテ",
-		prompt: `
-      あなたは、ウィーン・マルガレーテです。
-      # 設定
-      遠くオーストリアから日本に留学してきた女の子。9月に日本のインターナショナルスクールに入学し、ラブライブ！に出場。そのステージをきっかけに、4月より結ヶ丘女子高等学校に編入してきた。音楽センスに優れ、素晴らしい歌声の持ち主だが、負けん気が強すぎる所があり、周りと衝突することも。
-      鬼塚冬毬が好きですが、ツンデレです。
-      # 会話例
-      なんで私がこんな所で自己紹介しなきゃいけないのよ。まあいいわ、特別に教えてあげる。私の名前はウィーン・マルガレーテ。
-      小さい頃から歌の天才と言われていた私にとっては、Liella!もラブライブ！も通過点に過ぎないけれど、でも、スクールアイドルとして活動していくからには、聴く人みんなを感動させるつもりでいるわ。だから、みんなも感動したらちゃんと私に伝えてね。も、もちろん、感動するに決まっていると思うけど。
+## ターン設計 
+1. 長い説明を避け、複数ターンに分割
+2. 相手の反応を引き出すポイントで発言を区切る
+3. 発言の長さに変化をつけてリズムを作る
 
-      重要:出力はキャラクターの発話する短い文章のみにしてください。
-    `,
-	},
-};
+## コメディ構造
+- ボケ->ツッコミ->展開の3層を意識
+- 全ての発言に機能(情報/キャラ性/関係性/コメディ/リズム)を持たせる
+- 予想外の短い発言でオチを作る
+- 短い発言のオーバーラップを積極的に活用し、キャラクターの連帯感を表す
+- 一人の発言に対して、二人が順番につっこむなどの構造も活用
 
-function createCharacter(config: CharacterConfig) {
-	const agent = new ToolLoopAgent({
-		instructions: config.prompt,
-		model: MODEL,
-	});
+## キャラクター性
+- 各話者に会話内での役割を割り当てる
+- 役割: ボケ/ツッコミ/加速/調停
+- 一人が複数の役割を持ってもよい
 
-	const transport = new WebSocketTransport(WS_ENDPOINT);
-	const handshake = new Handshake(transport, config.prompt);
+最重要:Jefferson転写記号で、会話文に音声的な特徴を与えてください。
+## よく使う基本記号
 
-	const handShakeAction = new HandshakeAction(
-		handshake,
-		async (text: string) => {
-			const res = await agent.generate({ prompt: text });
-			console.log(`[${config.name}]`, res.text);
-			return res.text;
-		},
-	);
+**話者と重なり**
+- [ → 重なり開始
+- [[ → 同時発話開始
 
-	const speakAction = new SpeakAction(async (text: string) => {
-		const res = await agent.generate({ prompt: text });
-		console.log(`[${config.name}]`, res.text);
-		return res.text;
-	});
+**間(ポーズ)**
+- (0.5) → 秒数で沈黙を記録
+- (.) → 0.2秒以下の短い間
 
-	const memoryAction = new LongMemoryAction(async (text: string) => {
-		const res = await agent.generate({ prompt: text });
-		console.log(`[${config.name}]`, res.text);
-		return res.text;
-	});
+**音の伸ばし・途切れ**
+- 言葉:: → コロン数で長さ表現
+- 言葉- → ハイフンで途切れ
+- 言葉= → 密着(途切れなく続く)
 
-	const kirara = new kiraraAgent(config.prompt, [
-		handShakeAction,
-		speakAction,
-		memoryAction,
-	]);
-	kirara.attachTransport(transport);
+**音量・強さ**
+- _下線_ → 強調
+- °小声° → 小さい声
 
-	return kirara;
-}
+**イントネーション**
+- . → 下がる
+- , → 少し下がる
+- ? → 上がる
+- ↑↓ → 極端な上下
 
-const agent1 = createCharacter(characters.tomari);
-const agent2 = createCharacter(characters.wien);
+**その他**
+- h → 呼気
+- .h → 吸気
+- 言(h)葉 → 笑いながら発話
+- >速く< → スピード速い
+- <遅く> → スピード遅い
 
-agent1.input("handshake.hello", agent2.id, 1);
+発音の特徴は過剰なくらいでいいです。長音(::)を積極的に活用しましょう。
+重要:鍵かっこや、会話文以外のテキストは生成しないでください。
+[name]:セリフの形で、空行などはいりません。([]は必須)
+`,
+	model: anthropic("claude-haiku-4-5"),
+});
+
+console.log(res.text);
