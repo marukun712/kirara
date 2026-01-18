@@ -91,6 +91,7 @@ const res = await generateText({
 
 最重要:Jefferson転写記号で、会話文に音声的な特徴を与えてください。
 特に長音、二人でのオーバーラップを意識してください。
+オーバーラップは単独行で使ってはいけません。必ず2行連続にして、間隔はあけないでください。
 `,
 	model: anthropic("claude-haiku-4-5"),
 });
