@@ -220,25 +220,107 @@ export class JeffersonParser {
 	}
 }
 
-const flattenToken = (data: JeffersonToken) => {
-	const effects: string[] = [];
-	let current: JeffersonToken = data;
-	while (current.type !== "text") {
-		effects.push(current.type);
-		if (
-			!current.value ||
-			!Array.isArray(current.value) ||
-			current.value.length === 0 ||
-			!current.value[0]
+const processTokens = async (
+	tokens: JeffersonToken[],
+	speaker: number,
+	effects: string[] = [],
+): Promise<(AudioQuery | Pause | Glue | Bracket)[]> => {
+	const queries: (AudioQuery | Pause | Glue | Bracket)[] = [];
+	for (const token of tokens) {
+		if (token.type === "text") {
+			const query = await client.createAudioQuery(
+				token.value.join(""),
+				speaker,
+			);
+			query.intonationScale = 1.3;
+			query.speedScale = 1.2;
+			query.accentPhrases.forEach((phrase) => {
+				phrase.moras.forEach((mora) => {
+					effects.forEach((effect) => {
+						if (effect === "small") {
+							mora.vowel_length = Math.max(0.05, mora.vowel_length * 0.65);
+							mora.pitch -= 0.25;
+						} else if (effect === "strong") {
+							if (mora.consonant_length !== undefined)
+								mora.consonant_length *= 1.5;
+							mora.vowel_length *= 1.1;
+						} else if (effect === "fast") {
+							mora.vowel_length *= 0.85;
+						} else if (effect === "slow") {
+							mora.vowel_length *= 1.3;
+						}
+					});
+				});
+			});
+			queries.push({ type: "query", value: { speaker, query } });
+		} else if (token.type === "long") {
+			const last = queries.pop();
+			if (last?.type === "query") {
+				const lastPhrase =
+					last.value.query.accentPhrases[
+						last.value.query.accentPhrases.length - 1
+					];
+				const lastMora = lastPhrase?.moras.pop();
+				if (lastMora) {
+					lastMora.vowel_length += token.value * 0.05;
+					lastPhrase?.moras.push(lastMora);
+					queries.push(last);
+				}
+			}
+		} else if (token.type === "up") {
+			const last = queries.pop();
+			if (last?.type === "query") {
+				const lastPhrase =
+					last.value.query.accentPhrases[
+						last.value.query.accentPhrases.length - 1
+					];
+				const lastMora = lastPhrase?.moras.pop();
+				if (lastMora) {
+					lastMora.pitch += token.value * 0.07;
+					lastPhrase?.moras.push(lastMora);
+					queries.push(last);
+				}
+			}
+		} else if (token.type === "down") {
+			const last = queries.pop();
+			if (last?.type === "query") {
+				const lastPhrase =
+					last.value.query.accentPhrases[
+						last.value.query.accentPhrases.length - 1
+					];
+				const lastMora = lastPhrase?.moras.pop();
+				if (lastMora) {
+					lastMora.pitch -= token.value * 0.07;
+					lastPhrase?.moras.push(lastMora);
+					queries.push(last);
+				}
+			}
+		} else if (
+			token.type === "small" ||
+			token.type === "strong" ||
+			token.type === "fast" ||
+			token.type === "slow"
 		) {
-			throw new Error("Invalid structure, expected nested value");
+			const childQueries = await processTokens(token.value, speaker, [
+				...effects,
+				token.type,
+			]);
+			queries.push(...childQueries);
+		} else if (token.type === "pause") {
+			queries.push({ type: "pause", value: token.value });
+		} else if (token.type === "glue") {
+			queries.push({ type: "glue", value: token.value });
+		} else if (token.type === "bracket") {
+			const childQueries = await processTokens(token.value, speaker, effects);
+			if (childQueries.length > 0 && childQueries[0]?.type === "query") {
+				queries.push({
+					type: "bracket",
+					value: childQueries[0].value,
+				});
+			}
 		}
-		current = current.value[0];
 	}
-	return {
-		text: current.value,
-		effects,
-	};
+	return queries;
 };
 
 export async function playConversation(text: string) {
@@ -278,127 +360,8 @@ export async function playConversation(text: string) {
 			default:
 				speaker = 107;
 		}
-		for (const token of line.tokens) {
-			console.log(JSON.stringify(token, null, 2));
-			if (token.type === "text") {
-				console.log("TEXT", token.value.join(""));
-				const query = await client.createAudioQuery(
-					token.value.join(""),
-					speaker,
-				);
-				query.intonationScale = 1.3;
-				query.speedScale = 1.2;
-				queries.push({ type: "query", value: { speaker, query } });
-			} else if (token.type === "long") {
-				const last = queries.pop();
-				if (last?.type === "query") {
-					const lastPhrase =
-						last?.value.query.accentPhrases[
-							last.value.query.accentPhrases.length - 1
-						];
-					const lastMora = lastPhrase?.moras.pop();
-					if (lastMora) {
-						lastMora.vowel_length += token.value * 0.05;
-						lastPhrase?.moras.push(lastMora);
-						console.log("LONG", token.value);
-						queries.push(last);
-					}
-				}
-			} else if (token.type === "up") {
-				const last = queries.pop();
-				if (last?.type === "query") {
-					const lastPhrase =
-						last?.value.query.accentPhrases[
-							last.value.query.accentPhrases.length - 1
-						];
-					const lastMora = lastPhrase?.moras.pop();
-					if (lastMora) {
-						lastMora.pitch += token.value * 0.07;
-						lastPhrase?.moras.push(lastMora);
-						console.log("UP", token.value);
-						queries.push(last);
-					}
-				}
-			} else if (token.type === "down") {
-				const last = queries.pop();
-				if (last?.type === "query") {
-					const lastPhrase =
-						last?.value.query.accentPhrases[
-							last.value.query.accentPhrases.length - 1
-						];
-					const lastMora = lastPhrase?.moras.pop();
-					if (lastMora) {
-						lastMora.pitch -= token.value * 0.07;
-						lastPhrase?.moras.push(lastMora);
-						console.log("DOWN", token.value);
-						queries.push(last);
-					}
-				}
-			} else if (
-				token.type === "small" ||
-				token.type === "strong" ||
-				token.type === "fast" ||
-				token.type === "slow"
-			) {
-				const { text, effects } = flattenToken(token);
-				const query = await client.createAudioQuery(text.join(""), speaker);
-				query.intonationScale = 1.3;
-				query.speedScale = 1.2;
-				query.accentPhrases.forEach((phrase) => {
-					phrase.moras.forEach((mora) => {
-						effects.forEach((effect) => {
-							if (effect === "small") {
-								mora.vowel_length = Math.max(0.05, mora.vowel_length * 0.65);
-								mora.pitch -= 0.25;
-							} else if (effect === "strong") {
-								if (mora.consonant_length !== undefined)
-									mora.consonant_length *= 1.5;
-								mora.vowel_length *= 1.1;
-							} else if (effect === "fast") {
-								mora.vowel_length *= 0.85;
-							} else if (effect === "slow") {
-								mora.vowel_length *= 1.3;
-							}
-						});
-					});
-				});
-				console.log(effects, text.join(""));
-				queries.push({ type: "query", value: { speaker, query } });
-			} else if (token.type === "pause") {
-				queries.push({ type: "pause", value: token.value });
-				console.log("PAUSE", token.value);
-			} else if (token.type === "glue") {
-				queries.push({ type: "glue", value: token.value });
-				console.log("GLUE", token.value);
-			} else if (token.type === "bracket") {
-				const child = token.value[0];
-				if (!child) continue;
-				const { text, effects } = flattenToken(child);
-				const query = await client.createAudioQuery(text.join(""), speaker);
-				query.intonationScale = 1.3;
-				query.speedScale = 1.2;
-				query.accentPhrases.forEach((phrase) => {
-					phrase.moras.forEach((mora) => {
-						effects.forEach((effect) => {
-							if (effect === "small") {
-								mora.vowel_length = Math.max(0.05, mora.vowel_length * 0.65);
-								mora.pitch -= 0.25;
-							} else if (effect === "strong") {
-								if (mora.consonant_length !== undefined)
-									mora.consonant_length *= 1.5;
-								mora.vowel_length *= 1.1;
-							} else if (effect === "fast") {
-								mora.vowel_length *= 0.85;
-							} else if (effect === "slow") {
-								mora.vowel_length *= 1.3;
-							}
-						});
-					});
-				});
-				queries.push({ type: "bracket", value: { speaker, query } });
-				console.log("BRACKET", effects, text.join(""));
-			}
-		}
+		const lineQueries = await processTokens(line.tokens, speaker);
+		queries.push(...lineQueries);
 	}
 
 	for await (const item of queries) {
@@ -431,20 +394,3 @@ export async function playConversation(text: string) {
 		}
 	}
 }
-
-await playConversation(`
-[kyoko]:あー.
-[aya]:どうしたの?そんなに、消しゴム、見つめて.
-[kyoko]:これさー、消しゴムって言うけどさ、使うと
-[kyoko]:ゴム自体は、増えてない?
-[natsumi]:[は::?]
-[aya]:[え::?]
-[kyoko]:だって、消すと、カスが出るじゃん↑._消してるのに、物質的には、増えてる気がする_.=
-[aya]:=>あー!わかるかも::!<消しカス、集めると結構な量になるもんね.
-[natsumi]:(.)減ってるから.本体.
-[kyoko]:えー、でもさー-
-[kyoko]:これを全部集めて、ギュッ↑てしたら、元の形に戻るのかな.
-[natsumi]:戻んないよ。進めろよ、プリント.
-[aya]:でも、もし戻ったら::(1)無限消しゴム?
-[kyoko]:それだ:::!エコだね.
-`);
