@@ -18,6 +18,20 @@
         pkgs = import nixpkgs {
           inherit system;
         };
+
+        appSource = pkgs.runCommand "agent-source" { } ''
+          mkdir -p "$out/app"
+          cp -r ${./.}/. $out/app/
+        '';
+
+        imageRoot = pkgs.buildEnv {
+          name = "agent-image-root";
+          paths = [
+            appSource
+            pkgs.nix
+            pkgs.bash
+          ];
+        };
       in
       {
         devShell = pkgs.mkShell {
@@ -26,6 +40,26 @@
             pkgs.erlang
             pkgs.elixir-ls
           ];
+        };
+
+        packages.default = pkgs.dockerTools.buildImage {
+          name = "kirara-agent";
+          tag = "latest";
+          copyToRoot = imageRoot;
+          runAsRoot = ''
+            mkdir -p /etc/nix
+            echo "experimental-features = nix-command flakes" > /etc/nix/nix.conf
+          '';
+          config = {
+            WorkingDir = "/app";
+            Cmd = [
+              "nix"
+              "develop"
+              "--command"
+              "mix"
+              "run"
+            ];
+          };
         };
       }
     );
