@@ -1,9 +1,14 @@
-FROM nixos/nix
+FROM elixir:latest
 
 WORKDIR /app
+
+COPY data/ ./
+COPY mix.exs mix.lock ./
+
+RUN mix deps.get
+
 COPY . .
 
-RUN mkdir -p /etc/nix && \
-    echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+RUN mix compile
 
-CMD ["nix", "develop", "--command", "mix", "run"]
+CMD ["mix", "run", "-e", "Main.start()"]

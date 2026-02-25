@@ -1,9 +1,10 @@
-FROM nixos/nix
+FROM oven/bun:latest
 
 WORKDIR /app
+
+COPY package.json ./
+RUN bun install
+
 COPY . .
 
-RUN mkdir -p /etc/nix && \
-    echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
-
-CMD ["nix", "develop", "--command", "bun", "index"]
+CMD ["bun", "index.ts"]

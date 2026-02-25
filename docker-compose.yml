@@ -1,20 +1,43 @@
 services:
+  litellm:
+    image: docker.litellm.ai/berriai/litellm:main-stable
+    container_name: litellm
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml"]
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+    networks:
+      - internal-only
+      - external
+
   discord:
     build:
       context: ./discord
+    environment:
+      POLKA_TOKEN: ${POLKA_TOKEN}
+      MAI_TOKEN: ${MAI_TOKEN}
     container_name: discord
     networks:
       - internal-only
+      - external
 
   agent:
     build:
       context: ./agent
     container_name: agent
+    environment:
+      ANTHROPIC_BASE_URL: http://litellm:4000
+      ANTHROPIC_API_KEY: ${LITELLM_MASTER_KEY}
     depends_on:
       - discord
+      - litellm
     networks:
-      - internal-only
+      - internal-only 
 
 networks:
   internal-only:
     internal: true
+  external:
+    driver: bridge

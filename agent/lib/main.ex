@@ -1,4 +1,6 @@
 defmodule Main do
-  Observer.start_link()
-  Observer.ping()
+  def start() do
+    Observer.start_link()
+    Observer.ping()
+  end
 end

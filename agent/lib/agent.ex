@@ -6,6 +6,7 @@ defmodule Module.Agent do
     |> loop(tools)
   end
 
+  @spec loop(ReqLLM.Context.t(), [ReqLLM.Tool.t()]) :: ReqLLM.Context.t()
   defp loop(context, tools) do
     case ReqLLM.generate_text(@model, context, tools: tools) do
       {:ok, response} ->

@@ -25,3 +25,4 @@ example-*.tar
 .env
 data
 .direnv
+.elixir_ls
