@@ -1,21 +1,24 @@
-# Example
+# agent
 
-**TODO: Add description**
+[![Package Version](https://img.shields.io/hexpm/v/agent)](https://hex.pm/packages/agent)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/agent/)
 
-## Installation
+```sh
+gleam add agent@1
+```
+```gleam
+import agent
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `example` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:example, "~> 0.1.0"}
-  ]
-end
+pub fn main() -> Nil {
+  // TODO: An example of the project in use
+}
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/example>.
+Further documentation can be found at <https://hexdocs.pm/agent>.
 
+## Development
+
+```sh
+gleam run   # Run the project
+gleam test  # Run the tests
+```

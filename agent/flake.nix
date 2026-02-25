@@ -22,9 +22,8 @@
       {
         devShell = pkgs.mkShell {
           buildInputs = [
-            pkgs.elixir
+            pkgs.gleam
             pkgs.erlang
-            pkgs.elixir-ls
           ];
         };
       }

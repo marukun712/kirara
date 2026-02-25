@@ -28,7 +28,6 @@ services:
       context: ./agent
     container_name: agent
     environment:
-      ANTHROPIC_BASE_URL: http://litellm:4000
       ANTHROPIC_API_KEY: ${LITELLM_MASTER_KEY}
     depends_on:
       - discord
