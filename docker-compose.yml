@@ -1,0 +1,20 @@
+services:
+  discord:
+    build:
+      context: ./discord
+    container_name: discord
+    networks:
+      - internal-only
+
+  agent:
+    build:
+      context: ./agent
+    container_name: agent
+    depends_on:
+      - discord
+    networks:
+      - internal-only
+
+networks:
+  internal-only:
+    internal: true
