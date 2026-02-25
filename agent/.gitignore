@@ -23,3 +23,5 @@ example-*.tar
 /tmp/
 
 .env
+data
+.direnv

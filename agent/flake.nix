@@ -24,7 +24,7 @@
           buildInputs = [
             pkgs.elixir
             pkgs.erlang
-            pkgs.  elixir-ls
+            pkgs.elixir-ls
           ];
         };
       }
