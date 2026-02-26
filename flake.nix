@@ -1,5 +1,5 @@
 {
-  description = "Shell";
+  description = "kirara devShell";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -24,6 +24,7 @@
           buildInputs = [
             pkgs.gleam
             pkgs.erlang
+            pkgs.bun
           ];
         };
       }
