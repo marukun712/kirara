@@ -10,6 +10,7 @@ export async function generateDSL(): Promise<string> {
 	for await (const message of query({
 		prompt,
 		options: {
+			model: "claude-haiku-4-5",
 			cwd: "./",
 			settingSources: ["project"],
 			allowedTools: ["Skill"],
