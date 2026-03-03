@@ -2,4 +2,4 @@ export type {
 	EventType,
 	ParameterName,
 	ParameterValues,
-} from "../data/config/config.ts";
+} from "../../data/config/config.ts";

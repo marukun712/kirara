@@ -1,4 +1,4 @@
-import { config } from "../../data/config/config.ts";
+import { config } from "../../../data/config/config.ts";
 import type { Transitions } from "../dsl/schema.ts";
 
 interface ValidationIssue {

@@ -1,5 +1,5 @@
 import { Environment } from "@marcbachmann/cel-js";
-import { config } from "../../data/config/config.ts";
+import { config } from "../../../data/config/config.ts";
 import type { Transitions } from "../dsl/schema.ts";
 import type { ParameterValues } from "../types.ts";
 

@@ -1,5 +1,5 @@
 import { YAML } from "bun";
-import { RuleRegenerationScheduler } from "./src/agent/scheduler.ts";
+import { Scheduler } from "./src/agent/scheduler.ts";
 import { generateTransitions } from "./src/agent/skill.ts";
 import { TransitionsSchema } from "./src/dsl/schema.ts";
 import { StateMachineEngine } from "./src/engine/index.ts";
@@ -14,7 +14,7 @@ async function main() {
 	createWebSocketServer(engine, 8080);
 	console.log("ws://localhost:8080");
 
-	const scheduler = new RuleRegenerationScheduler(engine);
+	const scheduler = new Scheduler(engine);
 	scheduler.start();
 }
 

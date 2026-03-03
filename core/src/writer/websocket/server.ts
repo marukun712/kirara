@@ -1,5 +1,5 @@
 import type { ServerWebSocket } from "bun";
-import { config } from "../../data/config/config.ts";
+import { config } from "../../../data/config/config.ts";
 import type { StateMachineEngine } from "../engine/index.ts";
 import { InputMessageSchema } from "./messages.ts";
 

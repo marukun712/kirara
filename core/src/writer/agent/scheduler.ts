@@ -3,7 +3,7 @@ import { TransitionsSchema } from "../dsl/schema.ts";
 import type { StateMachineEngine } from "../engine/index.ts";
 import { generateTransitions } from "./skill.ts";
 
-export class RuleRegenerationScheduler {
+export class Scheduler {
 	private intervalMs = 5 * 60 * 1000;
 	private intervalId: Timer | null = null;
 
