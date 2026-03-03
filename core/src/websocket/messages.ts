@@ -1,0 +1,16 @@
+import z from "zod";
+
+export const InputMessageSchema = z.object({
+	type: z.literal("input"),
+	kind: z.string(),
+	data: z.unknown(),
+});
+
+export const OutputMessageSchema = z.object({
+	type: z.literal("output"),
+	parameter: z.string(),
+	value: z.number().min(0).max(1),
+});
+
+export type InputMessage = z.infer<typeof InputMessageSchema>;
+export type OutputMessage = z.infer<typeof OutputMessageSchema>;
