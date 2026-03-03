@@ -1,16 +1,17 @@
 import z from "zod";
 
-export const ParameterRuleSchema = z.object({
+export const TransitionSchema = z.object({
+	event: z.string(),
 	parameter: z.string(),
 	expression: z.string(),
 	description: z.string().optional(),
 });
 
-export const YAMLDSLSchema = z.object({
+export const TransitionsSchema = z.object({
 	version: z.string(),
 	description: z.string().optional(),
-	rules: z.record(z.string(), z.array(ParameterRuleSchema)),
+	transitions: z.array(TransitionSchema),
 });
 
-export type ParameterRule = z.infer<typeof ParameterRuleSchema>;
-export type YAMLDSL = z.infer<typeof YAMLDSLSchema>;
+export type Transition = z.infer<typeof TransitionSchema>;
+export type Transitions = z.infer<typeof TransitionsSchema>;

@@ -1,15 +1,15 @@
 import { Environment } from "@marcbachmann/cel-js";
 import { config } from "../../data/config/config.ts";
-import type { YAMLDSL } from "../dsl/schema.ts";
+import type { Transitions } from "../dsl/schema.ts";
 import type { ParameterValues } from "../types.ts";
 
 export class StateMachineEngine {
 	private env: Environment;
-	private rules: YAMLDSL;
+	private config: Transitions;
 	private params: ParameterValues;
 
-	constructor(rules: YAMLDSL) {
-		this.rules = rules;
+	constructor(transitions: Transitions) {
+		this.config = transitions;
 		this.env = new Environment();
 		this.env.registerVariable("event", "map");
 		this.env.registerVariable("params", "map");
@@ -25,23 +25,26 @@ export class StateMachineEngine {
 	}
 
 	processEvent(eventType: string, eventData: unknown): ParameterValues {
-		const eventRules = this.rules.rules[eventType];
-		if (!eventRules) {
+		const candidate = this.config.transitions.filter(
+			(t) => t.event === eventType,
+		);
+
+		if (!candidate) {
 			return this.params;
 		}
 
 		const updatedParams = { ...this.params };
 
-		for (const rule of eventRules) {
+		for (const transition of candidate) {
 			try {
-				const result = this.env.evaluate(rule.expression, {
+				const result = this.env.evaluate(transition.expression, {
 					event: eventData,
 					params: updatedParams,
 				});
 
 				const numResult = typeof result === "bigint" ? Number(result) : result;
 
-				updatedParams[rule.parameter as keyof ParameterValues] = Math.min(
+				updatedParams[transition.parameter as keyof ParameterValues] = Math.min(
 					1.0,
 					Math.max(0.0, numResult),
 				);
@@ -54,7 +57,7 @@ export class StateMachineEngine {
 		return this.params;
 	}
 
-	updateRules(newRules: YAMLDSL): void {
-		this.rules = newRules;
+	updateRules(newTransitions: Transitions): void {
+		this.config = newTransitions;
 	}
 }

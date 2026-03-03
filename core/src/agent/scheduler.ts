@@ -1,7 +1,7 @@
 import { YAML } from "bun";
-import { YAMLDSLSchema } from "../dsl/schema.ts";
+import { TransitionsSchema } from "../dsl/schema.ts";
 import type { StateMachineEngine } from "../engine/index.ts";
-import { generateDSL } from "./skill.ts";
+import { generateTransitions } from "./skill.ts";
 
 export class RuleRegenerationScheduler {
 	private intervalMs = 5 * 60 * 1000;
@@ -24,11 +24,11 @@ export class RuleRegenerationScheduler {
 
 	private async regenerate(): Promise<void> {
 		try {
-			const yamlContent = await generateDSL();
+			const yamlContent = await generateTransitions();
 
 			const parsed = YAML.parse(yamlContent);
-			const validated = YAMLDSLSchema.parse(parsed);
-			Bun.write("./data/state.yml", JSON.stringify(validated, null, 2));
+			const validated = TransitionsSchema.parse(parsed);
+			Bun.write("./data/transitions.yml", JSON.stringify(validated, null, 2));
 
 			this.engine.updateRules(validated);
 		} catch (error) {

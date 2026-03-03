@@ -2,7 +2,7 @@ import z from "zod";
 
 export const InputMessageSchema = z.object({
 	type: z.literal("input"),
-	kind: z.string(),
+	event: z.string(),
 	data: z.unknown(),
 });
 
