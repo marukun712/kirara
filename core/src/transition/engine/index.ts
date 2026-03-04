@@ -1,9 +1,9 @@
 import { Environment } from "@marcbachmann/cel-js";
 import { config } from "../../../data/config/config.ts";
-import type { Transitions } from "../dsl/schema.ts";
+import type { Transitions } from "../schema/index.ts";
 import type { ParameterValues } from "../types.ts";
 
-export class StateMachineEngine {
+export class TransitionEngine {
 	private env: Environment;
 	private config: Transitions;
 	private params: ParameterValues;

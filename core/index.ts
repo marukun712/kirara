@@ -1,21 +1,12 @@
 import { YAML } from "bun";
-import { Scheduler } from "./src/agent/scheduler.ts";
-import { generateTransitions } from "./src/agent/skill.ts";
-import { TransitionsSchema } from "./src/dsl/schema.ts";
-import { StateMachineEngine } from "./src/engine/index.ts";
-import { createWebSocketServer } from "./src/websocket/server.ts";
+import { TransitionEngine } from "./src/transition/engine/index.ts";
+import { TransitionsSchema } from "./src/transition/schema/index.ts";
 
 async function main() {
-	const yamlContent = await generateTransitions();
-	const rules = TransitionsSchema.parse(YAML.parse(yamlContent));
-
-	const engine = new StateMachineEngine(rules);
-
-	createWebSocketServer(engine, 8080);
-	console.log("ws://localhost:8080");
-
-	const scheduler = new Scheduler(engine);
-	scheduler.start();
+	const file = Bun.file("./data/transitions.yml");
+	const text = await file.text();
+	const parsed = TransitionsSchema.parse(YAML.parse(text));
+	const _engine = new TransitionEngine(parsed);
 }
 
 main().catch(console.error);

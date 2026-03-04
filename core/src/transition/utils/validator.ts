@@ -1,5 +1,5 @@
 import { config } from "../../../data/config/config.ts";
-import type { Transitions } from "../dsl/schema.ts";
+import type { Transitions } from "../schema/index.ts";
 
 interface ValidationIssue {
 	type: "error" | "warning";
