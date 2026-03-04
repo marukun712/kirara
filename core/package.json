@@ -1,7 +1,13 @@
 {
-	"name": "@kirara/core",
+	"name": "core",
 	"module": "index.ts",
 	"type": "module",
+	"exports": {
+		"./types": "./src/transition/schema/index.ts",
+		"./emitter": "./src/transition/transport/index.ts",
+		"./engine": "./src/transition/engine/index.ts",
+		"./listener": "./src/actions/index.ts"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.5",
 		"@types/bun": "latest"
@@ -11,9 +17,6 @@
 	},
 	"dependencies": {
 		"@marcbachmann/cel-js": "^7.5.1",
-		"@opencode-ai/sdk": "^1.2.16",
-		"@types/ws": "^8.18.1",
-		"ws": "^8.19.0",
 		"zod": "^4.3.6"
 	}
 }

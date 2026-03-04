@@ -1,0 +1,17 @@
+{
+	"name": "kirara",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"workspaces": [
+		"core",
+		"discord"
+	],
+	"devDependencies": {
+		"@biomejs/biome": "2.4.5",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
+}

@@ -1,8 +1,8 @@
 import { EventEmitter } from "node:events";
 import type { TransitionEngine } from "../engine/index.ts";
-import { InputMessageSchema } from "./messages.ts";
+import { type Config, InputMessageSchema } from "../schema/index.ts";
 
-export function createEventEmitter(engine: TransitionEngine) {
+export function createEventEmitter(engine: TransitionEngine, config: Config) {
 	const emitter = new EventEmitter();
 
 	const interval = setInterval(() => {

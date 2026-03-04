@@ -1,15 +1,20 @@
 {
-  "name": "discord",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "discord.js": "^14.25.1"
-  }
+	"name": "discord",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"core": "workspace:*",
+		"discord.js": "^14.25.1",
+		"@opencode-ai/sdk": "^1.2.16",
+		"@types/ws": "^8.18.1",
+		"ws": "^8.19.0",
+		"zod": "4.3.6"
+	}
 }

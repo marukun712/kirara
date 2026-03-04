@@ -1,6 +1,7 @@
+import type { Config } from "core/types";
 import z from "zod";
 
-export const config = {
+export const config: Config = {
 	events: {
 		mention: z.object({
 			from: z.string(),
