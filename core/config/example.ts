@@ -2,7 +2,12 @@ import z from "zod";
 
 export const config = {
 	events: {
+		mention: z.object({
+			from: z.string(),
+			content: z.string(),
+		}),
 		msg: z.object({
+			from: z.string(),
 			content: z.string(),
 		}),
 		tick: z.object({
@@ -33,7 +38,3 @@ export const config = {
 		},
 	},
 } as const;
-
-export type EventType = keyof typeof config.events;
-export type ParameterName = keyof typeof config.parameters;
-export type ParameterValues = Record<ParameterName, number>;

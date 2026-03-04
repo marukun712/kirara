@@ -8,8 +8,7 @@ export const InputMessageSchema = z.object({
 
 export const OutputMessageSchema = z.object({
 	type: z.literal("output"),
-	parameter: z.string(),
-	value: z.number().min(0).max(1),
+	parameter: z.record(z.string(), z.number().min(0).max(1)),
 });
 
 export type InputMessage = z.infer<typeof InputMessageSchema>;

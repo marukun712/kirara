@@ -8,13 +8,10 @@ export function createEventEmitter(engine: TransitionEngine) {
 
 	const interval = setInterval(() => {
 		const params = engine.getParams();
-		for (const [name, value] of Object.entries(params)) {
-			emitter.emit("output", {
-				type: "output",
-				parameter: name,
-				value: value as number,
-			});
-		}
+		emitter.emit("output", {
+			type: "output",
+			parameter: params,
+		});
 	}, 500);
 
 	emitter.on("input", (rawMessage: string) => {

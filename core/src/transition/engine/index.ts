@@ -1,12 +1,11 @@
 import { Environment } from "@marcbachmann/cel-js";
 import { config } from "../../../data/config/config.ts";
 import type { Transitions } from "../schema/index.ts";
-import type { ParameterValues } from "../types.ts";
 
 export class TransitionEngine {
 	private env: Environment;
 	private config: Transitions;
-	private params: ParameterValues;
+	private params: Record<string, number>;
 
 	constructor(transitions: Transitions) {
 		this.config = transitions;
@@ -14,17 +13,17 @@ export class TransitionEngine {
 		this.env.registerVariable("event", "map");
 		this.env.registerVariable("params", "map");
 
-		this.params = {} as ParameterValues;
+		this.params = {};
 		for (const [name, def] of Object.entries(config.parameters)) {
-			this.params[name as keyof ParameterValues] = def.initial;
+			this.params[name] = def.initial;
 		}
 	}
 
-	getParams(): ParameterValues {
-		return { ...this.params };
+	getParams() {
+		return this.params;
 	}
 
-	processEvent(eventType: string, eventData: unknown): ParameterValues {
+	processEvent(eventType: string, eventData: unknown) {
 		const candidate = this.config.transitions.filter(
 			(t) => t.event === eventType,
 		);
@@ -44,7 +43,7 @@ export class TransitionEngine {
 
 				const numResult = typeof result === "bigint" ? Number(result) : result;
 
-				updatedParams[transition.parameter as keyof ParameterValues] = Math.min(
+				updatedParams[transition.parameter] = Math.min(
 					1.0,
 					Math.max(0.0, numResult),
 				);

@@ -1,30 +1,39 @@
 import { YAML } from "bun";
-import { StateEngine } from "./src/state/engine/index.ts";
-import { StatesConfigSchema } from "./src/state/schema/index.ts";
-import { createStateEventEmitter } from "./src/state/transport/index.ts";
+import { ActionListener, ActionsSchema } from "./src/actions/index.ts";
+import { generate } from "./src/agent/skill.ts";
 import { TransitionEngine } from "./src/transition/engine/index.ts";
 import { TransitionsSchema } from "./src/transition/schema/index.ts";
 import { createEventEmitter as createTransitionEmitter } from "./src/transition/transport/index.ts";
+import type { OutputMessage } from "./src/transition/transport/messages.ts";
 
 async function main() {
-	const transitionsFile = Bun.file("./data/transitions.yml");
+	let transitionsFile = Bun.file("./data/transitions.yml");
+	let actionsFile = Bun.file("./data/actions.yml");
+
+	const exists =
+		(await transitionsFile.exists()) && (await actionsFile.exists());
+
+	if (!exists) {
+		generate();
+		transitionsFile = Bun.file("./data/transitions.yml");
+		actionsFile = Bun.file("./data/actions.yml");
+	}
+
 	const transitionsText = await transitionsFile.text();
 	const transitionsConfig = TransitionsSchema.parse(
 		YAML.parse(transitionsText),
 	);
 	const transitionEngine = new TransitionEngine(transitionsConfig);
 
-	const statesFile = Bun.file("./data/states.yml");
-	const statesText = await statesFile.text();
-	const statesConfig = StatesConfigSchema.parse(YAML.parse(statesText));
-	const stateEngine = new StateEngine(statesConfig);
+	const actionsText = await actionsFile.text();
+	const actionsConfig = ActionsSchema.parse(YAML.parse(actionsText));
+	const listener = new ActionListener(actionsConfig);
 
 	const transitionsEmitter = createTransitionEmitter(transitionEngine);
-	const stateEmitter = createStateEventEmitter(transitionsEmitter, stateEngine);
 
-	stateEmitter.on("action", (actionMessage) => {
-		console.log("Action triggered:", JSON.stringify(actionMessage, null, 2));
-		stateEngine.completeAction();
+	transitionsEmitter.on("output", (output: OutputMessage) => {
+		const res = listener.check(output.parameter);
+		console.log(res);
 	});
 
 	transitionsEmitter.emit(
@@ -35,6 +44,17 @@ async function main() {
 			data: { content: "Hello!" },
 		}),
 	);
+
+	setInterval(() => {
+		transitionsEmitter.emit(
+			"input",
+			JSON.stringify({
+				type: "input",
+				event: "tick",
+				data: { timestamp: Date.now() },
+			}),
+		);
+	}, 1000);
 }
 
 main().catch(console.error);
