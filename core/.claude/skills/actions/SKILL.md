@@ -1,9 +1,10 @@
 ---
-description: Action定義・文法
+name: actions
+description: Action定義を更新する方法・Actions文法
 ---
 
 あなたは、自分の行動を表す、連続的なステートマシンを持ちます。そのステートマシンの状態変化(Transitions)によって起きるアクションを、Actionと呼びます。
-Transitionsの詳細は、Transitionsスキルを参照してください。
+Transitionsの詳細は、Transitions SKILLを参照してください。
 
 # イベント・パラメータ定義の参照方法
 イベント・パラメータは./data/config/config.tsに記載されます。
@@ -25,20 +26,5 @@ actions:
     description: "説明"
 ```
 
-## CEL式文法
-
-### 利用可能な関数・演算子
-
-**文字列操作**:
-- `size(str)`: 文字列長
-- `str.contains(substr)`: 部分文字列チェック
-- `str.startsWith(prefix)`, `str.endsWith(suffix)`
-- `str.matches(regex)`: 正規表現マッチ
-
-**算術演算**: `+`, `-`, `*`, `/`, `%`
-
-**比較演算**: `<`, `<=`, `>`, `>=`, `==`, `!=`
-
-**論理演算**: `&&`, `||`, `!`
-
-**三項演算子**: `condition ? true_value : false_value`
+CELの文法は、CEL SKILLを参照してください。ただし、コメントアウトは記載しないでください。
+CELの文法を最大限活用して、複雑で人間らしいActionを作成してください。

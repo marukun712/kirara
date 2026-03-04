@@ -1,12 +1,13 @@
-import { YAML } from "bun";
+import { type ServerWebSocket, serve, YAML } from "bun";
 import { ActionListener, ActionsSchema } from "./src/actions/index.ts";
 import { generate } from "./src/agent/skill.ts";
 import { TransitionEngine } from "./src/transition/engine/index.ts";
 import { TransitionsSchema } from "./src/transition/schema/index.ts";
-import { createEventEmitter as createTransitionEmitter } from "./src/transition/transport/index.ts";
+import { createEventEmitter } from "./src/transition/transport/index.ts";
 import type { OutputMessage } from "./src/transition/transport/messages.ts";
+import { InputMessageSchema } from "./src/transition/transport/messages.ts";
 
-async function main() {
+async function setup() {
 	let transitionsFile = Bun.file("./data/transitions.yml");
 	let actionsFile = Bun.file("./data/actions.yml");
 
@@ -14,7 +15,7 @@ async function main() {
 		(await transitionsFile.exists()) && (await actionsFile.exists());
 
 	if (!exists) {
-		generate();
+		await generate();
 		transitionsFile = Bun.file("./data/transitions.yml");
 		actionsFile = Bun.file("./data/actions.yml");
 	}
@@ -29,32 +30,46 @@ async function main() {
 	const actionsConfig = ActionsSchema.parse(YAML.parse(actionsText));
 	const listener = new ActionListener(actionsConfig);
 
-	const transitionsEmitter = createTransitionEmitter(transitionEngine);
+	const transitionsEmitter = createEventEmitter(transitionEngine);
 
-	transitionsEmitter.on("output", (output: OutputMessage) => {
-		const res = listener.check(output.parameter);
-		console.log(res);
-	});
-
-	transitionsEmitter.emit(
-		"input",
-		JSON.stringify({
-			type: "input",
-			event: "msg",
-			data: { content: "Hello!" },
-		}),
-	);
-
-	setInterval(() => {
-		transitionsEmitter.emit(
-			"input",
-			JSON.stringify({
-				type: "input",
-				event: "tick",
-				data: { timestamp: Date.now() },
-			}),
-		);
-	}, 1000);
+	return { transitionsEmitter, listener };
 }
 
-main().catch(console.error);
+const { transitionsEmitter, listener } = await setup();
+
+const clients = new Set<ServerWebSocket>();
+
+transitionsEmitter.on("output", (output: OutputMessage) => {
+	const res = listener.check(output.parameter);
+	const json = JSON.stringify(res);
+	for (const ws of clients) {
+		if (ws.readyState === 1) ws.send(json);
+	}
+});
+
+serve({
+	port: 3000,
+	fetch(req, server) {
+		if (server.upgrade(req)) return;
+		return new Response("Upgrade Required", { status: 426 });
+	},
+	websocket: {
+		open(ws) {
+			clients.add(ws);
+		},
+		close(ws) {
+			clients.delete(ws);
+		},
+		message(_ws, message) {
+			try {
+				const parsed = InputMessageSchema.safeParse(
+					JSON.parse(message.toString()),
+				);
+				if (!parsed.success) return;
+				transitionsEmitter.emit("input", JSON.stringify(parsed.data));
+			} catch (e) {
+				console.error(e);
+			}
+		},
+	},
+});

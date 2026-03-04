@@ -1,4 +1,5 @@
 ---
+name: transitions
 description: Transitionsを更新する方法・Transitionsの文法
 ---
 
@@ -27,25 +28,5 @@ transitions:
     description: "説明"
 ```
 
-## CEL式文法
-
-### コンテキスト変数
-
-- `event.<フィールド>`: イベントデータ
-- `params.<名前>`: 現在のパラメータ値
-
-### 利用可能な関数・演算子
-
-**文字列操作**:
-- `size(str)`: 文字列長
-- `str.contains(substr)`: 部分文字列チェック
-- `str.startsWith(prefix)`, `str.endsWith(suffix)`
-- `str.matches(regex)`: 正規表現マッチ
-
-**算術演算**: `+`, `-`, `*`, `/`, `%`
-
-**比較演算**: `<`, `<=`, `>`, `>=`, `==`, `!=`
-
-**論理演算**: `&&`, `||`, `!`
-
-**三項演算子**: `condition ? true_value : false_value`
+CELの文法は、CEL SKILLを参照してください。ただし、コメントアウトは記載しないでください。
+CELの文法を最大限活用して、複雑で人間らしいTransitionを作成してください。

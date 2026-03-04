@@ -7,6 +7,7 @@
       "dependencies": {
         "@anthropic-ai/claude-agent-sdk": "^0.2.63",
         "@marcbachmann/cel-js": "^7.5.1",
+        "@opencode-ai/sdk": "^1.2.16",
         "@types/ws": "^8.18.1",
         "discord.js": "^14.25.1",
         "ws": "^8.19.0",
@@ -88,6 +89,8 @@
     "@img/sharp-win32-x64": ["@img/sharp-win32-x64@0.34.5", "", { "os": "win32", "cpu": "x64" }, "sha512-+29YMsqY2/9eFEiW93eqWnuLcWcufowXewwSNIT6UwZdUUCrM3oFjMWH/Z6/TMmb4hlFenmfAVbpWeup2jryCw=="],
 
     "@marcbachmann/cel-js": ["@marcbachmann/cel-js@7.5.1", "", { "bin": { "cel-evaluate": "bin/cel-evaluate.js" } }, "sha512-3X+TKpt/xyPsVSU3R2bVeZQCOW5L29y+EVDOmOp2xnyD7bifNM/UypBaqs2Z6oC075p+tKtjPUT1kUwnyY7cQg=="],
+
+    "@opencode-ai/sdk": ["@opencode-ai/sdk@1.2.16", "", {}, "sha512-y9ae9VnCcuog0GaI4DveX1HB6DBoZgGN3EuJVlRFbBCPwhzkls6fCfHSb5+VnTS6Fy0OWFUL28VBCmixL/D+/Q=="],
 
     "@sapphire/async-queue": ["@sapphire/async-queue@1.5.5", "", {}, "sha512-cvGzxbba6sav2zZkH8GPf2oGk9yYoD5qrNWdu9fRehifgnFZJMV+nuy2nON2roRO4yQQ+v7MK/Pktl/HgfsUXg=="],
 

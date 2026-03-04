@@ -23,8 +23,7 @@
         devShell = pkgs.mkShell {
           buildInputs = [
             pkgs.bun
-            pkgs.erlang
-            pkgs.elixir
+            pkgs.opencode
           ];
         };
       }
