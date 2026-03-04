@@ -1,5 +1,4 @@
 import { EventEmitter } from "node:events";
-import { config } from "../../../data/config/config.ts";
 import type { TransitionEngine } from "../engine/index.ts";
 import { InputMessageSchema } from "./messages.ts";
 

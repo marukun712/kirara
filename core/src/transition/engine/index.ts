@@ -1,5 +1,4 @@
 import { Environment } from "@marcbachmann/cel-js";
-import { config } from "../../../data/config/config.ts";
 import type { Transitions } from "../schema/index.ts";
 
 export class TransitionEngine {
@@ -7,7 +6,7 @@ export class TransitionEngine {
 	private config: Transitions;
 	private params: Record<string, number>;
 
-	constructor(transitions: Transitions) {
+	constructor(transitions: Transitions, config: Record<string, number>) {
 		this.config = transitions;
 		this.env = new Environment();
 		this.env.registerVariable("event", "map");
