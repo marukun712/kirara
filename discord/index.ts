@@ -5,7 +5,7 @@ import type { InputMessage, OutputMessage } from "core/types";
 import { TransitionsSchema } from "core/types";
 import { Client } from "discord.js";
 import { ActionListener, ActionsSchema } from "../core/src/actions/index.ts";
-import { generate, refresh } from "./agent/skill.ts";
+import { generate, refresh } from "./agent/writer.ts";
 import { config } from "./data/config/config.ts";
 
 const createClient = (token?: string) => {

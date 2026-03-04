@@ -1,5 +1,5 @@
 import { createOpencode } from "@opencode-ai/sdk";
-import type { InputMessage } from "../transition/transport/messages";
+import type { InputMessage } from "core/types";
 
 const { client } = await createOpencode();
 
@@ -7,7 +7,7 @@ async function run(prompt: string) {
 	const { data: session } = await client.session.create();
 	if (!session) throw new Error("Session not found");
 
-	const res = await client.session.prompt({
+	await client.session.prompt({
 		path: { id: session.id },
 		body: {
 			model: { providerID: "anthropic", modelID: "claude-haiku-4-5" },
@@ -15,7 +15,7 @@ async function run(prompt: string) {
 		},
 	});
 
-	console.log(res);
+	console.log("Config generated");
 	return;
 }
 
