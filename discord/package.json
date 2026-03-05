@@ -10,10 +10,11 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"core": "workspace:*",
-		"discord.js": "^14.25.1",
+		"@anthropic-ai/claude-agent-sdk": "^0.2.69",
 		"@opencode-ai/sdk": "^1.2.16",
 		"@types/ws": "^8.18.1",
+		"core": "workspace:*",
+		"discord.js": "^14.25.1",
 		"ws": "^8.19.0",
 		"zod": "4.3.6"
 	}

@@ -3,7 +3,7 @@
 	"module": "index.ts",
 	"type": "module",
 	"exports": {
-		"./types": "./src/transition/schema/index.ts",
+		"./types": "./src/schema/index.ts",
 		"./emitter": "./src/transition/transport/index.ts",
 		"./engine": "./src/transition/engine/index.ts",
 		"./listener": "./src/actions/index.ts"

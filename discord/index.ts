@@ -1,11 +1,14 @@
 import { YAML } from "bun";
 import { createEventEmitter } from "core/emitter";
 import { TransitionEngine } from "core/engine";
-import type { InputMessage, OutputMessage } from "core/types";
-import { TransitionsSchema } from "core/types";
+import { ActionListener } from "core/listener";
+import {
+	CharacterSchema,
+	type InputMessage,
+	type OutputMessage,
+} from "core/types";
 import { Client } from "discord.js";
-import { ActionListener, ActionsSchema } from "../core/src/actions/index.ts";
-import { generate, refresh } from "./agent/writer.ts";
+import { generate, id, refresh } from "./agent/writer.ts";
 import { config } from "./data/config/config.ts";
 
 const createClient = (token?: string) => {
@@ -19,27 +22,21 @@ const createClient = (token?: string) => {
 const client = createClient(process.env.DISCORD_TOKEN);
 
 async function setup() {
-	let transitionsFile = Bun.file("./data/transitions.yml");
-	let actionsFile = Bun.file("./data/actions.yml");
-
-	const exists =
-		(await transitionsFile.exists()) && (await actionsFile.exists());
-
+	let char = Bun.file(`./data/${id}.yml`);
+	const exists = await char.exists();
 	if (!exists) {
 		await generate();
-		transitionsFile = Bun.file("./data/transitions.yml");
-		actionsFile = Bun.file("./data/actions.yml");
+		char = Bun.file(`./data/${id}.yml`);
 	}
 
-	const transitionsText = await transitionsFile.text();
-	const transitionsConfig = TransitionsSchema.parse(
-		YAML.parse(transitionsText),
-	);
-	const actionsText = await actionsFile.text();
-	const actionsConfig = ActionsSchema.parse(YAML.parse(actionsText));
+	const text = await char.text();
+	const parsed = CharacterSchema.parse(YAML.parse(text));
 
-	const transitionEngine = new TransitionEngine(transitionsConfig, config);
-	const listener = new ActionListener(actionsConfig);
+	const transitionEngine = new TransitionEngine(
+		parsed.transitions,
+		parsed.params,
+	);
+	const listener = new ActionListener(parsed.actions);
 	const transitionsEmitter = createEventEmitter(transitionEngine, config);
 
 	return { transitionsEmitter, listener };
@@ -50,13 +47,14 @@ const { transitionsEmitter, listener } = await setup();
 const events: InputMessage[] = [];
 
 transitionsEmitter.on("output", (output: OutputMessage) => {
+	console.log(output);
 	const res = listener.check(output.parameter);
 	console.log(res);
 });
 
 setInterval(async () => {
 	await refresh(events);
-}, 5000);
+}, 50000);
 
 setInterval(() => {
 	const event: InputMessage = {

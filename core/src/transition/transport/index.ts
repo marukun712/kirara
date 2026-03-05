@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
+import { type Config, InputMessageSchema } from "../../schema/index.ts";
 import type { TransitionEngine } from "../engine/index.ts";
-import { type Config, InputMessageSchema } from "../schema/index.ts";
 
 export function createEventEmitter(engine: TransitionEngine, config: Config) {
 	const emitter = new EventEmitter();

@@ -1,0 +1,14 @@
+{
+	"defaultMode": "dontAsk",
+	"permissions": {
+		"deny": ["Bash", "Agent(Plan)"],
+		"allow": [
+			"Read(/data/**)",
+			"Edit(/data/**)",
+			"Write(/data/**)",
+			"WebFetch",
+			"Agent(Explore)",
+			"Skill"
+		]
+	}
+}

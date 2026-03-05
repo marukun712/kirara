@@ -1,20 +1,21 @@
 import { Environment } from "@marcbachmann/cel-js";
-import type { Config, Transitions } from "../schema/index.ts";
+import type { Params, Transition } from "../../schema/index.ts";
 
 export class TransitionEngine {
 	private env: Environment;
-	private config: Transitions;
+	private transitions: Transition[];
 	private params: Record<string, number>;
 
-	constructor(transitions: Transitions, config: Config) {
-		this.config = transitions;
+	constructor(transitions: Transition[], params: Params) {
+		this.transitions = transitions;
 		this.env = new Environment();
 		this.env.registerVariable("event", "map");
-		this.env.registerVariable("params", "map");
-
 		this.params = {};
-		for (const [name, def] of Object.entries(config.parameters)) {
+		for (const [name, def] of Object.entries(params)) {
 			this.params[name] = def.initial;
+		}
+		for (const key of Object.keys(params)) {
+			this.env.registerVariable(key, "double");
 		}
 	}
 
@@ -23,11 +24,9 @@ export class TransitionEngine {
 	}
 
 	processEvent(eventType: string, eventData: unknown) {
-		const candidate = this.config.transitions.filter(
-			(t) => t.event === eventType,
-		);
+		const candidate = this.transitions.filter((t) => t.event === eventType);
 
-		if (!candidate) {
+		if (candidate.length === 0) {
 			return this.params;
 		}
 
@@ -35,9 +34,10 @@ export class TransitionEngine {
 
 		for (const transition of candidate) {
 			try {
+				console.log(eventData);
 				const result = this.env.evaluate(transition.expression, {
 					event: eventData,
-					params: updatedParams,
+					...updatedParams,
 				});
 
 				const numResult = typeof result === "bigint" ? Number(result) : result;
@@ -55,7 +55,7 @@ export class TransitionEngine {
 		return this.params;
 	}
 
-	updateRules(newTransitions: Transitions): void {
-		this.config = newTransitions;
+	updateRules(newTransitions: Transition[]): void {
+		this.transitions = newTransitions;
 	}
 }

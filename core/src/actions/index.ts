@@ -1,32 +1,18 @@
 import { Environment } from "@marcbachmann/cel-js";
-import z from "zod";
-
-export const ActionSchema = z.object({
-	expression: z.string(),
-	on: z.string(),
-	description: z.string().optional(),
-});
-
-export const ActionsSchema = z.object({
-	version: z.string(),
-	description: z.string().optional(),
-	actions: z.array(ActionSchema),
-});
-
-type Actions = z.infer<typeof ActionsSchema>;
+import type { Action } from "../schema/index.ts";
 
 export class ActionListener {
 	private env: Environment;
-	private actions: Actions;
+	private actions: Action[];
 
-	constructor(actions: Actions) {
+	constructor(actions: Action[]) {
 		this.actions = actions;
 		this.env = new Environment();
 		this.env.registerVariable("params", "map");
 	}
 
 	check(params: Record<string, number>): string[] {
-		return this.actions.actions
+		return this.actions
 			.filter((a) => {
 				try {
 					return this.env.evaluate(a.expression, { params });
