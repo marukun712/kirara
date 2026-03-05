@@ -8,7 +8,8 @@
 			"Write(/data/**)",
 			"WebFetch",
 			"Agent(Explore)",
-			"Skill"
+			"Skill",
+			"mcp__discord__*"
 		]
 	}
 }
