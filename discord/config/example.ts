@@ -3,11 +3,6 @@ import z from "zod";
 
 export const config: Config = {
 	events: {
-		speak: z
-			.object({
-				timestamp: z.number(),
-			})
-			.describe("自分が発言したイベント"),
 		mention: z
 			.object({
 				from: z.string(),

@@ -81,7 +81,6 @@ export class Agent {
     `;
 
 		await this.run(prompt, {
-			model: "claude-haiku-4-5",
 			useMcp: true,
 		});
 

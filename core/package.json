@@ -4,8 +4,7 @@
 	"type": "module",
 	"exports": {
 		"./types": "./src/schema/index.ts",
-		"./engine": "./src/transition/index.ts",
-		"./listener": "./src/actions/index.ts"
+		"./engine": "./src/transition/index.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.5",

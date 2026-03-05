@@ -19,18 +19,11 @@ export const ParamsSchema = z.record(
 	}),
 );
 
-export const ActionSchema = z.object({
-	expression: z.string(),
-	on: z.string(),
-	description: z.string().optional(),
-});
-
 export const CharacterSchema = z.object({
 	version: z.string(),
 	description: z.string().optional(),
 	params: ParamsSchema,
 	transitions: z.array(TransitionSchema),
-	actions: z.array(ActionSchema),
 });
 
 export const InputMessageSchema = z.object({
@@ -46,7 +39,6 @@ export const OutputMessageSchema = z.object({
 
 export type Transition = z.infer<typeof TransitionSchema>;
 export type Params = z.infer<typeof ParamsSchema>;
-export type Action = z.infer<typeof ActionSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 export type Character = z.infer<typeof CharacterSchema>;
 export type InputMessage = z.infer<typeof InputMessageSchema>;

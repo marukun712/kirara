@@ -3,9 +3,9 @@ name: transitions
 description: Transitionsを更新する方法・Transitionsの文法
 ---
 
-## Transitions文法
+# Transitions文法
 
-### 基本構造
+## 基本構造
 
 ```yaml
 transitions:
