@@ -4,8 +4,7 @@
 	"type": "module",
 	"exports": {
 		"./types": "./src/schema/index.ts",
-		"./emitter": "./src/transition/transport/index.ts",
-		"./engine": "./src/transition/engine/index.ts",
+		"./engine": "./src/transition/index.ts",
 		"./listener": "./src/actions/index.ts"
 	},
 	"devDependencies": {
@@ -17,6 +16,7 @@
 	},
 	"dependencies": {
 		"@marcbachmann/cel-js": "^7.5.1",
+		"xstate": "^5.28.0",
 		"zod": "^4.3.6"
 	}
 }

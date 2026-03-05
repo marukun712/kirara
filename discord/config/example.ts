@@ -3,16 +3,29 @@ import z from "zod";
 
 export const config: Config = {
 	events: {
-		mention: z.object({
-			from: z.string(),
-			content: z.string(),
-		}),
-		msg: z.object({
-			from: z.string(),
-			content: z.string(),
-		}),
-		tick: z.object({
-			timestamp: z.number(),
-		}),
+		speak: z
+			.object({
+				timestamp: z.number(),
+			})
+			.describe("自分が発言したイベント"),
+		mention: z
+			.object({
+				from: z.string(),
+				content: z.string(),
+			})
+			.describe("Discordであなたにメンションがあったときのイベント"),
+		msg: z
+			.object({
+				from: z.string(),
+				content: z.string(),
+			})
+			.describe(
+				"自分の所属しているDiscordサーバーにメッセージが送信されたときのイベント",
+			),
+		tick: z
+			.object({
+				timestamp: z.number(),
+			})
+			.describe("状態更新のための定期送信イベント"),
 	},
 } as const;

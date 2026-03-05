@@ -1,92 +1,56 @@
 import { YAML } from "bun";
-import { createEventEmitter } from "core/emitter";
-import { TransitionEngine } from "core/engine";
+import { createTransitionMachine } from "core/engine";
 import { ActionListener } from "core/listener";
-import {
-	CharacterSchema,
-	type InputMessage,
-	type OutputMessage,
-} from "core/types";
+import { CharacterSchema, type InputMessage } from "core/types";
 import { Client } from "discord.js";
+import { createActor } from "xstate";
 import { generate, id, refresh } from "./agent/writer.ts";
-import { config } from "./data/config/config.ts";
 
-const createClient = (token?: string) => {
-	const client = new Client({
-		intents: ["Guilds", "GuildMessages", "MessageContent"],
-	});
-	client.login(token);
-	return client;
-};
+const TICK = 2500;
 
-const client = createClient(process.env.DISCORD_TOKEN);
+const client = new Client({
+	intents: ["Guilds", "GuildMessages", "MessageContent"],
+});
+client.login(process.env.DISCORD_TOKEN);
 
 async function setup() {
 	let char = Bun.file(`./data/${id}.yml`);
-	const exists = await char.exists();
-	if (!exists) {
+	if (!(await char.exists())) {
 		await generate();
 		char = Bun.file(`./data/${id}.yml`);
 	}
-
-	const text = await char.text();
-	const parsed = CharacterSchema.parse(YAML.parse(text));
-
-	const transitionEngine = new TransitionEngine(
-		parsed.transitions,
-		parsed.params,
+	const parsed = CharacterSchema.parse(YAML.parse(await char.text()));
+	const actor = createActor(
+		createTransitionMachine(parsed.transitions, parsed.params),
 	);
 	const listener = new ActionListener(parsed.actions);
-	const transitionsEmitter = createEventEmitter(transitionEngine, config);
-
-	return { transitionsEmitter, listener };
+	actor.start();
+	return { actor, listener };
 }
 
-const { transitionsEmitter, listener } = await setup();
-
+const { actor, listener } = await setup();
 const events: InputMessage[] = [];
 
-transitionsEmitter.on("output", (output: OutputMessage) => {
-	console.log(output);
-	const res = listener.check(output.parameter);
+const send = (event: string, data: unknown) => {
+	actor.send({ type: "PROCESS_EVENT", eventType: event, eventData: data });
+};
+
+actor.subscribe((snapshot) => {
+	const params = snapshot.context.params;
+	console.log(params);
+	const res = listener.check(params);
 	console.log(res);
 });
 
-setInterval(
-	async () => {
-		await refresh(events);
-	},
-	30 * 60 * 1000,
-);
-
-setInterval(() => {
-	const event: InputMessage = {
-		type: "input",
-		event: "tick",
-		data: { timestamp: Date.now() },
-	};
-	transitionsEmitter.emit("input", JSON.stringify(event));
-}, 1000);
+setInterval(() => send("tick", { timestamp: Date.now() }), TICK);
+setInterval(() => refresh(events), 30 * 60 * 1000);
 
 client.on("messageCreate", (message) => {
-	if (message.author.bot) return;
-
-	const isMentioned = message.mentions.users.has(client.user?.id ?? "");
-
-	if (isMentioned) {
-		const event: InputMessage = {
-			type: "input",
-			event: "mention",
-			data: { from: message.author.displayName, content: message.content },
-		};
-		transitionsEmitter.emit("input", JSON.stringify(event));
-		return;
-	} else {
-		const event: InputMessage = {
-			type: "input",
-			event: "msg",
-			data: { from: message.author.displayName, content: message.content },
-		};
-		transitionsEmitter.emit("input", JSON.stringify(event));
+	if (!client.user) return;
+	if (message.author.id === client.user.id) {
+		send("speak", { timestamp: Date.now() });
 	}
+	const isMentioned = message.mentions.users.has(client.user.id);
+	const event = isMentioned ? "mention" : "msg";
+	send(event, { from: message.author.displayName, content: message.content });
 });
