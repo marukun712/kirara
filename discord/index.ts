@@ -52,9 +52,12 @@ transitionsEmitter.on("output", (output: OutputMessage) => {
 	console.log(res);
 });
 
-setInterval(async () => {
-	await refresh(events);
-}, 50000);
+setInterval(
+	async () => {
+		await refresh(events);
+	},
+	30 * 60 * 1000,
+);
 
 setInterval(() => {
 	const event: InputMessage = {
