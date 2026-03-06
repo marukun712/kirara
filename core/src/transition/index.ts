@@ -2,6 +2,8 @@ import { Environment } from "@marcbachmann/cel-js";
 import { assign, cancel, createMachine, raise } from "xstate";
 import type { Character } from "../schema/index.ts";
 
+const ACTIVE_THRESHOLD = 0.3;
+
 export function createTransitionMachine(
 	character: Character,
 	trigger: (ctx: string[]) => void,
@@ -9,11 +11,6 @@ export function createTransitionMachine(
 	const env = new Environment();
 	env.registerVariable("event", "map");
 	env.registerVariable("params", "map");
-
-	const checkParams = (expr: string, params: Record<string, number>) => {
-		const raw = env.evaluate(expr, { params });
-		return typeof raw === "bigint" ? Number(raw) : raw;
-	};
 
 	return createMachine(
 		{
@@ -24,8 +21,13 @@ export function createTransitionMachine(
 						def.initial,
 					]),
 				),
+				preferred: Object.fromEntries(
+					Object.entries(character.params).map(([name, def]) => [
+						name,
+						def.preferred,
+					]),
+				),
 				transitions: character.transitions,
-				conditions: character.conditions,
 				CURRENT_CONTEXT: [] as string[],
 			},
 			initial: "idle",
@@ -67,7 +69,6 @@ export function createTransitionMachine(
 				UPDATE_RULES: {
 					actions: assign({
 						transitions: ({ event }) => event.transitions,
-						conditions: ({ event }) => event.conditions,
 					}),
 				},
 			},
@@ -78,21 +79,15 @@ export function createTransitionMachine(
 			},
 			guards: {
 				checkActive: ({ context }) =>
-					context.conditions.some((c: string) => {
-						try {
-							return !!checkParams(c, context.params);
-						} catch {
-							return false;
-						}
-					}),
+					Object.entries(context.params).some(
+						([k, v]) =>
+							Math.abs(v - (context.preferred[k] ?? 0.5)) > ACTIVE_THRESHOLD,
+					),
 				checkIdle: ({ context }) =>
-					!context.conditions.some((c: string) => {
-						try {
-							return !!checkParams(c, context.params);
-						} catch {
-							return false;
-						}
-					}),
+					!Object.entries(context.params).some(
+						([k, v]) =>
+							Math.abs(v - (context.preferred[k] ?? 0.5)) > ACTIVE_THRESHOLD,
+					),
 			},
 			actions: {
 				updateParams: assign({

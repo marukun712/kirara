@@ -16,14 +16,11 @@ export const ParamsSchema = z.record(
 	}),
 );
 
-export const ConditionsSchema = z.array(z.string());
-
 export const CharacterSchema = z.object({
 	version: z.string(),
 	description: z.string().optional(),
 	params: ParamsSchema,
 	transitions: z.array(TransitionSchema),
-	conditions: ConditionsSchema,
 });
 
 export const ConfigSchema = z.object({
