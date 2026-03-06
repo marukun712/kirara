@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <title>status</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: monospace;
+      background: #0e0e0e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 560px;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .state {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 2.5rem;
+    }
+
+    .param {
+      margin-bottom: 1.4rem;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+      font-size: 0.95rem;
+    }
+
+    .label {
+      color: #ccc;
+    }
+
+    .val {
+      color: #666;
+    }
+
+    .bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #222;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>status</h2>
+    <div class="state" id="state">—</div>
+    <div id="params"></div>
+  </div>
+  <script>
+    const colors = ["#f87171", "#fb923c", "#facc15", "#4ade80", "#38bdf8", "#a78bfa", "#f472b6"];
+    const ws = new WebSocket("ws://localhost:3000");
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      console.log(msg)
+      if (msg.type !== "snapshot") return;
+      document.getElementById("state").textContent = msg.value;
+      document.getElementById("params").innerHTML = Object.entries(msg.params).map(([k, v], i) => `
+        <div class="param">
+          <div class="meta">
+            <span class="label">${k}</span>
+            <span class="val">${Number(v)}</span>
+          </div>
+          <div class="bar-bg">
+            <div class="bar" style="width:${v * 100}%;background:${colors[i % colors.length]}"></div>
+          </div>
+        </div>
+      `).join("");
+    };
+  </script>
+</body>
+
+</html>

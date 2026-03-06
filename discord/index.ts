@@ -2,12 +2,12 @@ import { YAML } from "bun";
 import { createTransitionMachine } from "core/engine";
 import { CharacterSchema, type InputMessage } from "core/types";
 import { Client } from "discord.js";
+import { Hono } from "hono";
 import { createActor } from "xstate";
 import { generate, refresh } from "./agent";
 
 const TICK = 2500;
 const TOPIC = "logs";
-
 const id = "polka";
 const name = "高橋ポルカ";
 
@@ -69,11 +69,17 @@ client.on("messageCreate", (message) => {
 	});
 });
 
+const app = new Hono();
+const html = await Bun.file("./views/index.html").text();
+app.get("/", (c) => c.html(html));
+
 const server = Bun.serve({
 	port: 3000,
 	fetch(req, server) {
-		if (server.upgrade(req)) return;
-		return new Response("WebSocket only", { status: 426 });
+		if (req.headers.get("upgrade") === "websocket") {
+			if (server.upgrade(req)) return;
+		}
+		return app.fetch(req);
 	},
 	websocket: {
 		open(ws) {
