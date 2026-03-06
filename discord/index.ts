@@ -6,7 +6,7 @@ import { Hono } from "hono";
 import { createActor } from "xstate";
 import { generate, refresh } from "./agent";
 
-const TICK = 2500;
+const TICK = 50;
 const TOPIC = "logs";
 const id = "polka";
 const name = "高橋ポルカ";
