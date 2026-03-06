@@ -1,12 +1,12 @@
 import { Environment } from "@marcbachmann/cel-js";
-import { assign, cancel, createMachine, raise } from "xstate";
+import { assign, createMachine } from "xstate";
 import type { Character } from "../schema/index.ts";
 
 const ACTIVE_THRESHOLD = 0.3;
 
 export function createTransitionMachine(
 	character: Character,
-	trigger: (ctx: string[]) => void,
+	trigger: () => void,
 ) {
 	const env = new Environment();
 	env.registerVariable("event", "map");
@@ -28,7 +28,6 @@ export function createTransitionMachine(
 					]),
 				),
 				transitions: character.transitions,
-				CURRENT_CONTEXT: [] as string[],
 			},
 			initial: "idle",
 			states: {
@@ -41,23 +40,11 @@ export function createTransitionMachine(
 					},
 				},
 				active: {
+					entry: "callTrigger",
 					on: {
 						PROCESS_EVENT: {
 							guard: "checkIdle",
 							target: "idle",
-						},
-						ON_MESSAGE: {
-							actions: [
-								"pushContext",
-								cancel("triggerTimer"),
-								raise(
-									{ type: "TRIGGER" },
-									{ delay: "TRIGGER_DELAY", id: "triggerTimer" },
-								),
-							],
-						},
-						TRIGGER: {
-							actions: "callTrigger",
 						},
 					},
 				},
@@ -74,9 +61,6 @@ export function createTransitionMachine(
 			},
 		},
 		{
-			delays: {
-				TRIGGER_DELAY: 5000,
-			},
 			guards: {
 				checkActive: ({ context }) =>
 					Object.entries(context.params).some(
@@ -112,14 +96,7 @@ export function createTransitionMachine(
 						return next;
 					},
 				}),
-				pushContext: assign({
-					CURRENT_CONTEXT: ({ context, event }) => {
-						return context.CURRENT_CONTEXT.concat(event.eventData.content);
-					},
-				}),
-				callTrigger: ({ context }) => {
-					trigger(context.CURRENT_CONTEXT);
-				},
+				callTrigger: () => trigger(),
 			},
 		},
 	);

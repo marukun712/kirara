@@ -6,7 +6,7 @@ import { Hono } from "hono";
 import { createActor } from "xstate";
 import { generate, refresh } from "./agent";
 
-const TICK = 50;
+const TICK = 10;
 const TOPIC = "logs";
 const id = "polka";
 const name = "高橋ポルカ";
@@ -23,8 +23,8 @@ if (!(await char.exists())) {
 }
 const parsed = CharacterSchema.parse(YAML.parse(await char.text()));
 const actor = createActor(
-	createTransitionMachine(parsed, (ctx) => {
-		server.publish(TOPIC, JSON.stringify({ type: "ctx", data: ctx }));
+	createTransitionMachine(parsed, () => {
+		console.log("呼び出し");
 	}),
 );
 actor.start();
@@ -51,7 +51,7 @@ setInterval(
 		}),
 	TICK,
 );
-setInterval(() => refresh(id, name, events), 30 * 60 * 1000);
+setInterval(() => refresh(id, name, events), 5 * 60 * 1000);
 
 client.on("messageCreate", (message) => {
 	if (!client.user) return;

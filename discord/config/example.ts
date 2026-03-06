@@ -21,6 +21,6 @@ export const config: Config = {
 			.object({
 				timestamp: z.string(),
 			})
-			.describe("状態更新のための定期送信イベント"),
+			.describe("状態更新のための定期送信イベント。1tick=10msであることに注意"),
 	},
 } as const;
