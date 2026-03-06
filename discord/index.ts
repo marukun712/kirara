@@ -6,6 +6,7 @@ import { createActor } from "xstate";
 import { generate, refresh } from "./agent";
 
 const TICK = 2500;
+const TOPIC = "logs";
 
 const id = "polka";
 const name = "高橋ポルカ";
@@ -23,15 +24,22 @@ if (!(await char.exists())) {
 const parsed = CharacterSchema.parse(YAML.parse(await char.text()));
 const actor = createActor(
 	createTransitionMachine(parsed, (ctx) => {
-		console.log(ctx);
+		server.publish(TOPIC, JSON.stringify({ type: "ctx", data: ctx }));
 	}),
 );
 actor.start();
 
 const events: InputMessage[] = [];
 
-actor.subscribe(async (snapshot) => {
-	console.log(snapshot.context.params, snapshot.value);
+actor.subscribe((snapshot) => {
+	server.publish(
+		TOPIC,
+		JSON.stringify({
+			type: "snapshot",
+			params: snapshot.context.params,
+			value: snapshot.value,
+		}),
+	);
 });
 
 setInterval(
@@ -49,7 +57,6 @@ client.on("messageCreate", (message) => {
 	if (!client.user) return;
 	const isMentioned = message.mentions.users.has(client.user.id);
 	const event = isMentioned ? "mention" : "msg";
-	console.log(event, isMentioned);
 	actor.send({
 		type: "PROCESS_EVENT",
 		eventType: event,
@@ -60,4 +67,21 @@ client.on("messageCreate", (message) => {
 		eventType: event,
 		eventData: { content: message.content },
 	});
+});
+
+const server = Bun.serve({
+	port: 3000,
+	fetch(req, server) {
+		if (server.upgrade(req)) return;
+		return new Response("WebSocket only", { status: 426 });
+	},
+	websocket: {
+		open(ws) {
+			ws.subscribe(TOPIC);
+		},
+		close(ws) {
+			ws.unsubscribe(TOPIC);
+		},
+		message() {},
+	},
 });

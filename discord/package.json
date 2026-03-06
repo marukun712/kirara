@@ -12,9 +12,11 @@
 	"dependencies": {
 		"@anthropic-ai/claude-agent-sdk": "^0.2.69",
 		"@opencode-ai/sdk": "^1.2.16",
+		"@opentui/core": "^0.1.86",
 		"@types/ws": "^8.18.1",
 		"core": "workspace:*",
 		"discord.js": "^14.25.1",
+		"hono": "^4.12.5",
 		"ws": "^8.19.0",
 		"zod": "4.3.6"
 	}
