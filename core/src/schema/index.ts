@@ -11,6 +11,7 @@ export const ParamsSchema = z.record(
 	z.string(),
 	z.object({
 		initial: z.number(),
+		preferred: z.number(),
 		description: z.string(),
 	}),
 );
