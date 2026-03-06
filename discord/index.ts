@@ -3,8 +3,7 @@ import { createTransitionMachine } from "core/engine";
 import { CharacterSchema, type InputMessage } from "core/types";
 import { Client } from "discord.js";
 import { createActor } from "xstate";
-import { Agent } from "./agent";
-import { createDiscordMcpServer } from "./agent/mcp/discord";
+import { generate, refresh } from "./agent";
 
 const TICK = 2500;
 
@@ -16,42 +15,49 @@ const client = new Client({
 });
 client.login(process.env.DISCORD_TOKEN);
 
-const mcp = createDiscordMcpServer(client);
-
-async function setup(agent: Agent) {
-	let char = Bun.file(`./data/${id}.yml`);
-	if (!(await char.exists())) {
-		await agent.generate();
-		char = Bun.file(`./data/${id}.yml`);
-	}
-	const parsed = CharacterSchema.parse(YAML.parse(await char.text()));
-	const actor = createActor(
-		createTransitionMachine(parsed.transitions, parsed.params),
-	);
-	actor.start();
-	return { actor };
+let char = Bun.file(`./data/${id}.yml`);
+if (!(await char.exists())) {
+	await generate(id, name);
+	char = Bun.file(`./data/${id}.yml`);
 }
+const parsed = CharacterSchema.parse(YAML.parse(await char.text()));
+const actor = createActor(
+	createTransitionMachine(parsed, (ctx) => {
+		console.log(ctx);
+	}),
+);
+actor.start();
 
-const agent = new Agent(id, name, { discord: mcp });
-
-const { actor } = await setup(agent);
 const events: InputMessage[] = [];
 
-const send = (event: string, data: unknown) => {
-	actor.send({ type: "PROCESS_EVENT", eventType: event, eventData: data });
-};
-
 actor.subscribe(async (snapshot) => {
-	console.log(snapshot.context.params);
+	console.log(snapshot.context.params, snapshot.value);
 });
 
-setInterval(() => send("tick", { timestamp: Date.now() }), TICK);
-setInterval(() => agent.refresh(events), 30 * 60 * 1000);
+setInterval(
+	() =>
+		actor.send({
+			type: "PROCESS_EVENT",
+			eventType: "tick",
+			eventData: { timestamp: new Date().toISOString() },
+		}),
+	TICK,
+);
+setInterval(() => refresh(id, name, events), 30 * 60 * 1000);
 
 client.on("messageCreate", (message) => {
 	if (!client.user) return;
 	const isMentioned = message.mentions.users.has(client.user.id);
 	const event = isMentioned ? "mention" : "msg";
 	console.log(event, isMentioned);
-	send(event, { from: message.author.displayName, content: message.content });
+	actor.send({
+		type: "PROCESS_EVENT",
+		eventType: event,
+		eventData: { from: message.author.displayName, content: message.content },
+	});
+	actor.send({
+		type: "ON_MESSAGE",
+		eventType: event,
+		eventData: { content: message.content },
+	});
 });

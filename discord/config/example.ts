@@ -19,7 +19,7 @@ export const config: Config = {
 			),
 		tick: z
 			.object({
-				timestamp: z.number(),
+				timestamp: z.string(),
 			})
 			.describe("状態更新のための定期送信イベント"),
 	},
