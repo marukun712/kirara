@@ -6,7 +6,7 @@ import { Hono } from "hono";
 import { createActor } from "xstate";
 import { generate, refresh } from "./agent";
 
-const TICK = 10;
+const TICK = 500;
 const TOPIC = "logs";
 const id = "polka";
 const name = "高橋ポルカ";
@@ -51,7 +51,7 @@ setInterval(
 		}),
 	TICK,
 );
-setInterval(() => refresh(id, name, events), 5 * 60 * 1000);
+setInterval(() => refresh(id, name, events), 30 * 60 * 1000);
 
 client.on("messageCreate", (message) => {
 	if (!client.user) return;
