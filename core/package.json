@@ -4,7 +4,8 @@
 	"type": "module",
 	"exports": {
 		"./types": "./src/schema/index.ts",
-		"./engine": "./src/transition/index.ts"
+		"./engine": "./src/transition/index.ts",
+		"./actions": "./src/actions/index.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.5",
@@ -14,7 +15,7 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@marcbachmann/cel-js": "^7.5.1",
+		"mathjs": "^15.1.1",
 		"xstate": "^5.28.0",
 		"zod": "^4.3.6"
 	}

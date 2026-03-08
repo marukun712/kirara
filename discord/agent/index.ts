@@ -30,9 +30,7 @@ async function run(prompt: string) {
 export async function generate(id: string, name: string) {
 	const prompt = `
   あなたは優秀な脚本家です。${name}というキャラクターの行動を設計し、./data/${id}.ymlに保存してください。 
-  Writer SKILLに詳しい手順・規約があります。
-  行動を生成したら、頭の中でどのような遷移をするかシミュレーションして、それが本当に人間に可能な行動か、キャラクターらしい行動かを評価・修正してください。
-  あなたのミッションは、生き物のような動作をするDiscord Botのステートマシン設計をすることです。
+  Kirara SKILLに詳しい手順・規約があります。
   `;
 
 	await run(prompt);

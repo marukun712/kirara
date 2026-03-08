@@ -1,13 +1,12 @@
 {
 	"defaultMode": "dontAsk",
 	"permissions": {
-		"deny": ["Bash", "Agent(Plan)"],
+		"deny": ["Bash", "Agent"],
 		"allow": [
 			"Read(/data/**)",
 			"Edit(/data/**)",
 			"Write(/data/**)",
 			"WebFetch",
-			"Agent(Explore)",
 			"Skill",
 			"mcp__discord__*"
 		]

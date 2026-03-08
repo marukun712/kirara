@@ -22,7 +22,12 @@ export const config: Config = {
 				timestamp: z.string(),
 			})
 			.describe(
-				"状態更新のための定期送信イベント。1tick=500msであることに注意",
+				"状態更新のための定期送信イベント。あなたが設定したtickで送信されます",
 			),
+	},
+	actions: {
+		do_nothing: "何もしないということをする",
+		speak: "発言する",
+		web_search: "ネットサーフィンをする",
 	},
 } as const;

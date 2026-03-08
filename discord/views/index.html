@@ -212,12 +212,12 @@
   </div>
   <script>
     const colors = ["#f87171", "#fb923c", "#facc15", "#4ade80", "#38bdf8", "#a78bfa", "#f472b6"];
-    const ws = new WebSocket("ws://localhost:3000");
+    const ws = new WebSocket(`ws://${window.location.hostname}:3000`);
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
       if (msg.type !== "snapshot") return;
       document.getElementById("stateText").textContent = msg.value;
-      document.body.classList.toggle("active", msg.value === "active");
+      document.body.classList.toggle("active", msg.value !== "do_nothing");
       document.getElementById("params").innerHTML = Object.entries(msg.params).map(([k, v], i) => `
         <div class="param">
           <div class="meta">
