@@ -3,6 +3,16 @@ import z from "zod";
 
 export const config: Config = {
 	events: {
+		speak: z
+			.object({
+				timestamp: z.string(),
+			})
+			.describe("自分が発言した時のeffectイベント"),
+		search: z
+			.object({
+				timestamp: z.string(),
+			})
+			.describe("自分がWeb検索した時のeffectイベント"),
 		mention: z
 			.object({
 				from: z.string(),
@@ -27,7 +37,9 @@ export const config: Config = {
 	},
 	actions: {
 		do_nothing: "何もしないということをする",
-		speak: "発言する",
-		web_search: "ネットサーフィンをする",
+		watching:
+			"Discordをじっと見る。返信待ち、会話観察など。Watchingしている間はすべてのメッセージに返信してしまうので注意",
+		speak: "自分から発言する",
+		web_search: "ネットサーフィンしてコンテキストに積む",
 	},
 } as const;

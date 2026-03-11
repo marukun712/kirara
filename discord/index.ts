@@ -29,6 +29,21 @@ actor.start();
 
 actor.subscribe((snapshot) => {
 	const value = evalActions(snapshot.context.params, parsed.actions);
+	if (value === "speak") {
+		actor.send({
+			type: "PROCESS_EVENT",
+			kind: "speak",
+			data: { timestamp: new Date().toISOString() },
+		});
+	}
+	if (value === "web_search") {
+		actor.send({
+			type: "PROCESS_EVENT",
+			kind: "search",
+			data: { timestamp: new Date().toISOString() },
+		});
+	}
+
 	server.publish(
 		TOPIC,
 		JSON.stringify({

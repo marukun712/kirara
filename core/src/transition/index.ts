@@ -21,7 +21,7 @@ export function createTransitionMachine(
 							(t) => t.on === event.kind,
 						);
 						if (matched.length === 0) return context.params;
-						const next = context.params;
+						const next = { ...context.params };
 						for (const t of matched) {
 							try {
 								const value = evaluate(t.expression, {
