@@ -14,7 +14,7 @@ function createKiraraTools(id: string) {
 		tools: [
 			tool(
 				"simulate_character",
-				"キャラクター設定をシミュレーションして時系列データを返す",
+				"キャラクター設定をシミュレーションして1000TICK分の時系列データを返す",
 				{},
 				async () => {
 					const file = Bun.file(`./data/${id}.yml`);
@@ -26,6 +26,7 @@ function createKiraraTools(id: string) {
 					try {
 						const parsed = CharacterSchema.parse(YAML.parse(await file.text()));
 						const timeline = simulate(parsed);
+						console.log(timeline);
 						return {
 							content: [{ type: "text", text: JSON.stringify(timeline) }],
 						};
@@ -79,7 +80,9 @@ export async function generate(id: string, name: string) {
 	const prompt = `
   あなたは優秀な脚本家です。${name}というキャラクターの行動を設計し、./data/${id}.ymlに保存してください。
   Kirara SKILLに詳しい手順・規約があります。
-  大まかな行動基準として、メンションされたら即答・たまに話題を検索して投稿・自分が話しかけた後・話しかけられた後は積極的にチェック、みたいな方向をベースにしてください。
+  かならず暇パラメータを実装して、暇になったらしゃべるかWeb検索するみたいな挙動を実装してください。
+  ただし行動しっぱなしにならないように。
+  また、メンションされたら即答するようにしてください。
   ファイルには必ず相対パスでアクセスしてください。
   `;
 

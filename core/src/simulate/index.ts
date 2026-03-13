@@ -43,7 +43,7 @@ function evalActions(
 }
 
 export function simulate(char: Character) {
-	const TICKS = 750;
+	const TICKS = 1000;
 	const timeline: Array<{
 		tick: number;
 		event: string;
