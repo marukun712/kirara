@@ -20,12 +20,9 @@ export class Actor {
 		this.mcpServers = mcpServers;
 	}
 
-	private async run(
-		prompt: string,
-		opts: { model?: string; useMcp?: boolean },
-	) {
+	private async run(prompt: string, opts: { useMcp?: boolean }) {
 		const options: Options = {
-			model: opts.model,
+			model: "claude-haiku-4-5",
 			settingSources: ["project"],
 		};
 
@@ -81,7 +78,6 @@ export class Actor {
     `;
 
 		await this.run(prompt, {
-			model: "claude-haiku-4-5",
 			useMcp: true,
 		});
 

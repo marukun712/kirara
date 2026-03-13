@@ -88,7 +88,7 @@ setInterval(
 			transitions: parsed.transitions,
 		});
 	},
-	2 * 60 * 1000,
+	60 * 60 * 1000,
 );
 
 setInterval(
