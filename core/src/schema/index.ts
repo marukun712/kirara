@@ -10,7 +10,7 @@ export const TransitionSchema = z.object({
 export const ParamsSchema = z.record(
 	z.string(),
 	z.object({
-		initial: z.number(),
+		normal: z.number(),
 		description: z.string(),
 	}),
 );

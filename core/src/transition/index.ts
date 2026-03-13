@@ -9,7 +9,7 @@ export function createTransitionMachine(
 	return createMachine({
 		context: {
 			params: Object.fromEntries(
-				Object.entries(params).map(([name, def]) => [name, def.initial]),
+				Object.entries(params).map(([name, def]) => [name, def.normal]),
 			),
 			transitions,
 		},

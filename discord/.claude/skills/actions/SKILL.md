@@ -1,23 +1,22 @@
 ---
-name: actions 
-description: Actions定義の方法・文法
+name: actions
+description: Actions定義を更新する方法・文法
 ---
 
-# Actions文法
+# Actionとは
 
-## 基本構造
+Actionはキャラクターが取りうる行動です。
+tickごとに全Actionのスコアを計算し、最も高いものが実行されます。
+
+# 文法
 
 ```yaml
 actions:
   - name: "Action名"
-    expression: "Actionスコア式(mathjs)"
+    expression: "スコア式(mathjs)"
 ```
 
-## 用途
-あなたが設計するUtility AIは、tickごとにこのすべてのActionに対するAction式を計算し、スコアを算出して、最も高いものを行動として決定します。
-
-# 注意
-すべてのパラメータは0~1の数値型で変動します
-アクション名は必ずconfigファイルで定義されているもののみを使用してください。
-パラメータには、params.<param-name>でアクセスしてください
+- nameはconfigで定義されたAction名のみ使用可能
+- パラメータには `params.<n>` でアクセス
+- スコアは大きいほど選ばれやすくなります
 
