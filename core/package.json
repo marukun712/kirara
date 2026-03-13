@@ -5,7 +5,8 @@
 	"exports": {
 		"./types": "./src/schema/index.ts",
 		"./engine": "./src/transition/index.ts",
-		"./actions": "./src/actions/index.ts"
+		"./actions": "./src/actions/index.ts",
+		"./simulate": "./src/simulate/index.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.5",

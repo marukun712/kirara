@@ -15,6 +15,7 @@ kiraraは、LLMがキャラクターの内面をUtility AIとして設計・運�
 4. パラメータの変化式を設計する(Transitions SKILL参照)
 5. Actionのスコア式を設計する(Actions SKILL参照)
 6. YAMLファイルに保存する
+7. simulate_characterツールを使って、シミュレーション結果から改善を繰り返す
 
 # configファイルの確認
 

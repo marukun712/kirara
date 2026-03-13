@@ -1,6 +1,44 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
+import {
+	createSdkMcpServer,
+	query,
+	tool,
+} from "@anthropic-ai/claude-agent-sdk";
+import { YAML } from "bun";
+import { simulate } from "core/simulate";
+import { CharacterSchema } from "core/types";
 
-async function run(prompt: string) {
+function createKiraraTools(id: string) {
+	return createSdkMcpServer({
+		name: "kirara",
+		version: "1.0.0",
+		tools: [
+			tool(
+				"simulate_character",
+				"キャラクター設定をシミュレーションして時系列データを返す",
+				{},
+				async () => {
+					const file = Bun.file(`./data/${id}.yml`);
+					if (!(await file.exists())) {
+						return {
+							content: [{ type: "text", text: "ファイルが存在しません" }],
+						};
+					}
+					try {
+						const parsed = CharacterSchema.parse(YAML.parse(await file.text()));
+						const timeline = simulate(parsed);
+						return {
+							content: [{ type: "text", text: JSON.stringify(timeline) }],
+						};
+					} catch (e) {
+						return { content: [{ type: "text", text: `エラー: ${e}` }] };
+					}
+				},
+			),
+		],
+	});
+}
+
+async function run(prompt: string, id: string) {
 	const stream = query({
 		prompt,
 		options: {
@@ -15,6 +53,7 @@ async function run(prompt: string) {
 				"WebSearch",
 				"WebFetch",
 			],
+			mcpServers: { kirara: createKiraraTools(id) },
 		},
 	});
 
@@ -44,7 +83,7 @@ export async function generate(id: string, name: string) {
   ファイルには必ず相対パスでアクセスしてください。
   `;
 
-	await run(prompt);
+	await run(prompt, id);
 }
 
 export async function refresh(id: string, name: string) {
@@ -69,5 +108,5 @@ export async function refresh(id: string, name: string) {
   ファイルには必ず相対パスでアクセスしてください。
   `;
 
-	await run(prompt);
+	await run(prompt, id);
 }
