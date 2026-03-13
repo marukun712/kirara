@@ -1,11 +1,20 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import type { InputMessage } from "core/types";
 
 async function run(prompt: string) {
 	const stream = query({
 		prompt,
 		options: {
+			model: "claude-haiku-4-5",
 			settingSources: ["project"],
+			allowedTools: [
+				"Read",
+				"Edit",
+				"Write",
+				"Glob",
+				"Grep",
+				"WebSearch",
+				"WebFetch",
+			],
 		},
 	});
 
@@ -29,28 +38,19 @@ async function run(prompt: string) {
 
 export async function generate(id: string, name: string) {
 	const prompt = `
-  あなたは優秀な脚本家です。${name}というキャラクターの行動を設計し、./data/${id}.ymlに保存してください。 
+  あなたは優秀な脚本家です。${name}というキャラクターの行動を設計し、./data/${id}.ymlに保存してください。
   Kirara SKILLに詳しい手順・規約があります。
+  大まかな行動基準として、メンションされたら即答・たまに話題を検索して投稿・自分が話しかけた後・話しかけられた後は積極的にチェック、みたいな方向をベースにしてください。
+  ファイルには必ず相対パスでアクセスしてください。
   `;
 
 	await run(prompt);
 }
 
-export async function refresh(
-	id: string,
-	name: string,
-	events: InputMessage[],
-) {
-	if (events.length !== 0) {
-		const memoryPrompt = `
-    以下のイベントログを要約し、./data/memory/${id}/に保存してください。
-    ファイル名は内容を一言で表したものにしてください。
-    ${JSON.stringify(events, null, 2)}
-    `;
-		await run(memoryPrompt);
-	}
-
+export async function refresh(id: string, name: string) {
 	const prompt = `
+  現在時刻は${Date.now().toLocaleString()}です。
+
   あなたは優秀な脚本家です。${name}の行動を内省し、必要であれば改善して./data/${id}.ymlに保存してください。
 
   ## 参照ファイル
@@ -66,6 +66,7 @@ export async function refresh(
 
   ## 注意
   ログが少ない・改善不要であれば更新しなくてよい。
+  ファイルには必ず相対パスでアクセスしてください。
   `;
 
 	await run(prompt);

@@ -5,7 +5,9 @@ import { CharacterSchema } from "core/types";
 import { Client } from "discord.js";
 import { Hono } from "hono";
 import { createActor } from "xstate";
-import { generate } from "./agent";
+import { generate, refresh } from "./agent";
+import { Actor } from "./agent/actor";
+import { createDiscordMcpServer } from "./agent/mcp/discord";
 
 const TOPIC = "logs";
 const id = "polka";
@@ -26,24 +28,45 @@ const actor = createActor(
 	createTransitionMachine(parsed.transitions, parsed.params),
 );
 actor.start();
+const actorAgent = new Actor(id, name, {
+	discord: createDiscordMcpServer(client),
+});
 
-actor.subscribe((snapshot) => {
+let isActing = false;
+
+actor.subscribe(async (snapshot) => {
+	if (isActing) return;
+
 	const value = evalActions(snapshot.context.params, parsed.actions);
-	if (value === "speak") {
-		actor.send({
-			type: "PROCESS_EVENT",
-			kind: "speak",
-			data: { timestamp: new Date().toISOString() },
-		});
-	}
-	if (value === "web_search") {
-		actor.send({
-			type: "PROCESS_EVENT",
-			kind: "search",
-			data: { timestamp: new Date().toISOString() },
-		});
-	}
 
+	if (value && value !== "do_nothing") {
+		isActing = true;
+		try {
+			switch (value) {
+				case "speak":
+					await actorAgent.act(
+						"暇になってきたので、Discordをみてしゃべります。",
+					);
+					break;
+				case "web_search":
+					await actorAgent.act(
+						"暇になってきたので、Web検索をして時間つぶしをします。",
+					);
+					break;
+			}
+		} finally {
+			actor.send({
+				type: "PROCESS_EVENT",
+				kind: "effect",
+				data: { timestamp: new Date().toISOString() },
+			});
+			isActing = false;
+		}
+	}
+});
+
+actor.subscribe(async (snapshot) => {
+	const value = evalActions(snapshot.context.params, parsed.actions);
 	server.publish(
 		TOPIC,
 		JSON.stringify({
@@ -53,6 +76,20 @@ actor.subscribe((snapshot) => {
 		}),
 	);
 });
+
+setInterval(
+	async () => {
+		await refresh(id, name);
+		const char = Bun.file(`./data/${id}.yml`);
+		if (!(await char.exists())) return;
+		const parsed = CharacterSchema.parse(YAML.parse(await char.text()));
+		actor.send({
+			type: "UPDATE_RULES",
+			transitions: parsed.transitions,
+		});
+	},
+	2 * 60 * 1000,
+);
 
 setInterval(
 	() =>

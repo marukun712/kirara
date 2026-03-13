@@ -28,7 +28,6 @@ export function createTransitionMachine(
 									event: event.data,
 									params: next,
 								});
-								console.log(t.on, t.param, value);
 								next[t.param] = value;
 							} catch (e) {
 								console.error(e);

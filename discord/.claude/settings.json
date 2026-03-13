@@ -6,6 +6,9 @@
 			"Read(/data/**)",
 			"Edit(/data/**)",
 			"Write(/data/**)",
+			"Glob(/data/**)",
+			"Grep(/data/**)",
+			"WebSearch",
 			"WebFetch",
 			"Skill",
 			"mcp__discord__*"
