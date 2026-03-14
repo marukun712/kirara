@@ -12,6 +12,7 @@
 	"type": "module",
 	"workspaces": [
 		"core",
-		"discord"
+		"discord",
+		"mcp"
 	]
 }

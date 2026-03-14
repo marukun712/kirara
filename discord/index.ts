@@ -5,7 +5,6 @@ import { CharacterSchema } from "core/types";
 import { Client } from "discord.js";
 import { Hono } from "hono";
 import { createActor } from "xstate";
-import { generate, refresh } from "./agent";
 import { Actor } from "./agent/actor";
 import { createDiscordMcpServer } from "./agent/mcp/discord";
 
@@ -18,10 +17,9 @@ const client = new Client({
 });
 client.login(process.env.DISCORD_TOKEN);
 
-let char = Bun.file(`./data/${id}.yml`);
+const char = Bun.file(`./data/${id}.yml`);
 if (!(await char.exists())) {
-	await generate(id, name);
-	char = Bun.file(`./data/${id}.yml`);
+	throw new Error("Config not found");
 }
 const parsed = CharacterSchema.parse(YAML.parse(await char.text()));
 const actor = createActor(
@@ -76,20 +74,6 @@ actor.subscribe(async (snapshot) => {
 		}),
 	);
 });
-
-setInterval(
-	async () => {
-		await refresh(id, name);
-		const char = Bun.file(`./data/${id}.yml`);
-		if (!(await char.exists())) return;
-		const parsed = CharacterSchema.parse(YAML.parse(await char.text()));
-		actor.send({
-			type: "UPDATE_RULES",
-			transitions: parsed.transitions,
-		});
-	},
-	60 * 60 * 1000,
-);
 
 setInterval(
 	() =>

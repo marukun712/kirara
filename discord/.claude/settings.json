@@ -11,8 +11,7 @@
 			"WebSearch",
 			"WebFetch",
 			"Skill",
-			"mcp__discord__*",
-			"mcp__kirara__*"
+			"mcp__discord__*"
 		]
 	}
 }

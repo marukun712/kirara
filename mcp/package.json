@@ -1,0 +1,20 @@
+{
+	"name": "mcp",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5",
+		"core": "workspace:*"
+	},
+	"dependencies": {
+		"@hono/mcp": "^0.2.4",
+		"@modelcontextprotocol/sdk": "^1.27.1",
+		"hono": "^4.12.7",
+		"xstate": "^5.28.0",
+		"zod": "^4.3.6"
+	}
+}
