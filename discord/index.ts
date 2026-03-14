@@ -119,3 +119,4 @@ const server = Bun.serve({
 		message() {},
 	},
 });
+console.log("Status viewer started at http://localhost:3000");

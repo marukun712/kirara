@@ -19,15 +19,20 @@ const TestCaseSchema = z.array(
 );
 type TestCase = z.infer<typeof TestCaseSchema>;
 
+const timelineItemSchema = z.object({
+	tick: z.number(),
+	event: z.string(),
+	params: z.record(z.string(), z.number()),
+	action: z.string().nullable(),
+});
+
+const timelineSchema = z.array(timelineItemSchema);
+type Timeline = z.infer<typeof timelineSchema>;
+
 export function simulate(testcase: TestCase, char: Character) {
 	const TICKS = 300;
 
-	const timeline: Array<{
-		tick: number;
-		event: string;
-		params: Record<string, number>;
-		action: string | null;
-	}> = [];
+	const timeline: Timeline = [];
 
 	const params = Object.fromEntries(
 		Object.entries(char.params).map(([k, v]) => [k, v.normal]),
@@ -60,6 +65,9 @@ export function simulate(testcase: TestCase, char: Character) {
 				data: ev.data,
 			});
 		}
+
+		const currentParams = actor.getSnapshot().context.params;
+		Object.assign(params, currentParams);
 
 		const action = evalActions(params, char.actions);
 
@@ -111,4 +119,5 @@ app.all("/mcp", async (c) => {
 	return transport.handleRequest(c);
 });
 
-Bun.serve({ fetch: app.fetch, port: 3000 });
+Bun.serve({ fetch: app.fetch, port: 8080 });
+console.log("MCP server started at http://localhost:8080");
