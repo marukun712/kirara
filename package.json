@@ -11,8 +11,6 @@
 	"private": true,
 	"type": "module",
 	"workspaces": [
-		"core",
-		"discord",
-		"mcp"
+		"discord"
 	]
 }
