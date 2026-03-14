@@ -38,15 +38,26 @@ actor.subscribe(async (snapshot) => {
 	const value = evalActions(snapshot.context.params, parsed.actions);
 
 	if (value && value !== "do_nothing") {
+		server.publish(
+			TOPIC,
+			JSON.stringify({
+				type: "action",
+				value,
+				time: new Date().toISOString(),
+			}),
+		);
 		isActing = true;
 		try {
 			switch (value) {
-				case "speak":
+				case "watch_discord":
+					await actorAgent.act("暇になってきたので、Discordをじっと見ます。");
+					break;
+				case "post_to_discord":
 					await actorAgent.act(
 						"暇になってきたので、Discordをみてしゃべります。",
 					);
 					break;
-				case "web_search":
+				case "browse_web":
 					await actorAgent.act(
 						"暇になってきたので、Web検索をして時間つぶしをします。",
 					);
