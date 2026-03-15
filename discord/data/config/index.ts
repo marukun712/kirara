@@ -15,4 +15,4 @@ export const events = [
 	}),
 ];
 
-export const states = ["idle", "searching", "watching", "speaking"];
+export const states = ["idle", "searching", "speaking", "watching_after_speak"];
