@@ -61,14 +61,11 @@ export class Actor {
 		this.running = true;
 
 		const prompt = `
-    現在時刻は${Date.now().toLocaleString()}です。
-
-    あなたは優秀な俳優です。脚本家から${this.name}というキャラクターの行動指示が送られてくるので、それをうまく解釈して行動します。
     ${this.name}の詳細な設定/発言は、./data/CHARACTER.mdに保存されています。このファイルに記載されているリンクを参照しないと、強力な罰が課せられます。
  
     # メモ書き
     あなたの行動内容のまとめを./data/memory/${this.id}にファイルとして保存してください。
-    あなたが脚本家の指示に従う俳優で、どういう行動をしたかを明示してください。ファイル名は${Date.now().toLocaleString()}.mdです。
+    ファイル名は${Date.now().toLocaleString()}.mdです。
 
     # 行動指示
     ${text}
