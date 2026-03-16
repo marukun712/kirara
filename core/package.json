@@ -1,11 +1,8 @@
 {
-	"name": "discord",
+	"name": "core",
 	"module": "index.ts",
 	"type": "module",
 	"private": true,
-	"scripts": {
-		"dev": "bun index"
-	},
 	"devDependencies": {
 		"@types/bun": "latest"
 	},
@@ -13,10 +10,7 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@types/ws": "^8.18.1",
-		"discord.js": "^14.25.1",
-		"hono": "^4.12.5",
-		"ws": "^8.19.0",
-		"core": "workspace:*"
+		"@anthropic-ai/claude-agent-sdk": "^0.2.76",
+		"zod": "^4.3.6"
 	}
 }
