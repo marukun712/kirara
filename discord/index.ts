@@ -31,6 +31,10 @@ async function generate() {
       }
       の配列です。
 
+      # 持ち物
+      あなたはスマートフォンを持っています。
+      このスマートフォンでは、Web検索をしたり、Discordを見たりすることができます。
+
       # 設計方針
       まず、Obsidianを確認して、このキャラクターに既存のアクティビティがあるかを確認します。
       Obsidianのデイリーノートにその日1日の行動計画を作成します。
@@ -78,12 +82,14 @@ async function generate() {
 
 class AgentLoop {
 	timer?: Timer;
-	done: Set<string> = new Set<string>("idle");
+	ctx: string = "";
+	done: Set<string> = new Set<string>();
 	parsed: z.infer<typeof PlanSchema> = [];
 	actor: Actor;
 
 	constructor(actor: Actor) {
 		this.actor = actor;
+		this.done.add("idle");
 	}
 
 	async load() {
@@ -120,7 +126,8 @@ class AgentLoop {
 			if (!latest || this.done.has(latest.action)) return;
 			console.log(latest.action);
 			this.done.add(latest.action);
-			await this.actor.act(latest.action);
+			await this.actor.act(latest.action, this.ctx);
+			this.ctx = "";
 		}, 1000);
 	}
 
@@ -128,6 +135,10 @@ class AgentLoop {
 		if (this.timer) clearInterval(this.timer);
 		await this.load();
 		this.start();
+	}
+
+	addCtx(ctx: string) {
+		this.ctx += `${ctx}\n`;
 	}
 }
 
@@ -138,6 +149,7 @@ client.login(process.env.DISCORD_TOKEN);
 if (!process.env.OBSIDIAN_API_KEY) {
 	throw new Error("Invalid API Key");
 }
+
 const actor = new Actor({
 	discord: createDiscordMcpServer(client),
 	"obsidian-mcp-server": {
@@ -151,5 +163,16 @@ const actor = new Actor({
 		},
 	},
 });
+
 const loop = new AgentLoop(actor);
 await loop.reload();
+
+client.on("messageCreate", async (message) => {
+	if (!client.user) return;
+	if (message.mentions.users.has(client.user.id)) {
+		loop.addCtx(
+			`${message.author.id}:${message.author.displayName}があなたにメンションをしました`,
+		);
+		await actor.act("メンションの通知音が聞こえたので、確認する。", loop.ctx);
+	}
+});

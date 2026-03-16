@@ -44,7 +44,7 @@ export class Actor {
 		}
 	}
 
-	async act(text: string) {
+	async act(text: string, ctx: string) {
 		if (this.running) {
 			console.log("Agent busy, skipping...");
 			return;
@@ -53,11 +53,22 @@ export class Actor {
 		this.running = true;
 
 		const prompt = `
-    あなたは、./data/CHARACTER.mdに記載されているキャラクターとして以下の行動をします。
+    # 役割
+    あなたは、./data/CHARACTER.mdに記載されているキャラクターとして行動します。
+
+    # 手順
     まず、Obsidianを確認して、このキャラクターに既存のアクティビティがあるかを確認します。
-    行動: ${text}
     あなたの行動と感情を、Obsidianのデイリーノートに保存してください。
+
+    # 注意事項
+    なにか急ぎの用ができたり、返信確認のために細かなチェックをしたいなどあれば、plan.jsonの行動を書き換えてもよいです。
     ファイルには、必ず相対パスでアクセスしてください。
+    
+    # コンテキスト
+    ${ctx}
+
+    # 行動
+    ${text}
     `;
 
 		await this.run(prompt, {
