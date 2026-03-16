@@ -50,7 +50,6 @@ async function generate() {
     `,
 		options: {
 			settingSources: ["project"],
-			model: "claude-sonnet-4-6",
 			mcpServers: {
 				"obsidian-mcp-server": {
 					command: "bunx",

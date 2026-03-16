@@ -14,7 +14,6 @@ export class Actor {
 
 	private async run(prompt: string, opts: { useMcp?: boolean }) {
 		const options: Options = {
-			model: "claude-sonnet-4-6",
 			settingSources: ["project"],
 		};
 
