@@ -46,6 +46,7 @@ async function generate() {
       - ./data/plan.jsonに保存してください。
       - 更新する場合は、完全にファイルを上書きしてください。
       - ファイルには、必ず相対パスでアクセスしてください。
+      - 各プランには、2分程度のバッファを持たせること。
     `,
 		options: {
 			settingSources: ["project"],
@@ -107,6 +108,10 @@ class AgentLoop {
 	start() {
 		this.timer = setInterval(async () => {
 			if (generating) return;
+
+			// planをロードする
+			await this.load();
+
 			const now = Date.now();
 			// 現在時刻より前のイベントを取得
 			const previous = this.parsed.filter(
@@ -118,27 +123,16 @@ class AgentLoop {
 			// 現在のすべてのイベントが現在時刻より前のものだった場合
 			if (previous.length === this.parsed.length) {
 				await generate();
-				await this.reload();
 				return;
 			}
 
 			// イベントを実行
 			if (!latest || this.done.has(latest.action)) return;
-			console.log(latest.action);
+			console.log(latest.action, this.ctx);
 			this.done.add(latest.action);
 			await this.actor.act(latest.action, this.ctx);
 			this.ctx = "";
 		}, 1000);
-	}
-
-	async reload() {
-		if (this.timer) clearInterval(this.timer);
-		await this.load();
-		this.start();
-	}
-
-	addCtx(ctx: string) {
-		this.ctx += `${ctx}\n`;
 	}
 }
 
@@ -165,14 +159,14 @@ const actor = new Actor({
 });
 
 const loop = new AgentLoop(actor);
-await loop.reload();
+loop.start();
 
 client.on("messageCreate", async (message) => {
 	if (!client.user) return;
+	// メンション時かつbusyでないときは応答する
 	if (message.mentions.users.has(client.user.id)) {
-		loop.addCtx(
-			`${message.author.id}:${message.author.displayName}があなたにメンションをしました`,
-		);
+		loop.ctx += `${message.author.id}:${message.author.displayName}があなたにメンションをしました\n`;
 		await actor.act("メンションの通知音が聞こえたので、確認する。", loop.ctx);
+		loop.ctx = "";
 	}
 });
