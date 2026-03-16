@@ -62,6 +62,9 @@ loop.start();
 
 client.on("messageCreate", async (message) => {
 	if (!client.user) return;
+	// 健康的
+	const hour = new Date().getHours();
+	if (hour < 9 || hour > 24) return;
 	// メンション時かつbusyでないときは応答する
 	if (message.mentions.users.has(client.user.id)) {
 		loop.ctx += `${message.author.id}:${message.author.displayName}があなたにメンションをしました\n`;

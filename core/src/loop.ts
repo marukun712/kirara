@@ -33,6 +33,10 @@ export class AgentLoop {
 
 	start() {
 		this.timer = setInterval(async () => {
+			// 健康的
+			const hour = new Date().getHours();
+			if (hour < 9 || hour > 24) return;
+
 			if (this.planner.isBusy()) return;
 
 			// planをロードする

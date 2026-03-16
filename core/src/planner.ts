@@ -3,6 +3,7 @@ import { type McpServerConfig, query } from "@anthropic-ai/claude-agent-sdk";
 export class Planner {
 	private readonly mcpServers: Record<string, McpServerConfig>;
 	private running: boolean = false;
+	private session: string | undefined = undefined;
 
 	constructor(mcpServers: Record<string, McpServerConfig>) {
 		this.mcpServers = mcpServers;
@@ -14,10 +15,15 @@ export class Planner {
 			options: {
 				settingSources: ["project"],
 				mcpServers: this.mcpServers,
+				resume: this.session,
 			},
 		});
 
 		for await (const event of stream) {
+			if (event.type === "system" && event.subtype === "init") {
+				this.session = event.session_id;
+				console.log(`Session started with ID: ${this.session}`);
+			}
 			switch (event.type) {
 				case "assistant":
 					for (const block of event.message.content) {
@@ -47,6 +53,7 @@ export class Planner {
     現在時刻は${new Date().toLocaleString()}です。
 
     ./data/PLANNER.mdの内容に従ってください。
+    ファイルには、必ず相対パスでアクセスしてください。
     `;
 
 		await this.run(prompt);
