@@ -5,24 +5,16 @@ import {
 } from "@anthropic-ai/claude-agent-sdk";
 
 export class Actor {
-	readonly id;
-	readonly name;
 	private readonly mcpServers: Record<string, McpServerConfig>;
 	private running: boolean = false;
 
-	constructor(
-		id: string,
-		name: string,
-		mcpServers: Record<string, McpServerConfig>,
-	) {
-		this.id = id;
-		this.name = name;
+	constructor(mcpServers: Record<string, McpServerConfig>) {
 		this.mcpServers = mcpServers;
 	}
 
 	private async run(prompt: string, opts: { useMcp?: boolean }) {
 		const options: Options = {
-			model: "claude-haiku-4-5",
+			model: "claude-sonnet-4-6",
 			settingSources: ["project"],
 		};
 
@@ -61,16 +53,11 @@ export class Actor {
 		this.running = true;
 
 		const prompt = `
-    ${this.name}の詳細な設定/発言は、./data/CHARACTER.mdに保存されています。このファイルに記載されているリンクを参照しないと、強力な罰が課せられます。
- 
-    # メモ書き
-    あなたの行動内容のまとめを./data/memory/${this.id}にファイルとして保存してください。
-    ファイル名は${Date.now().toLocaleString()}.mdです。
-
-    # 行動指示
-    ${text}
-
-    ファイルには必ず相対パスでアクセスしてください。
+    あなたは、./data/CHARACTER.mdに記載されているキャラクターとして以下の行動をします。
+    まず、Obsidianを確認して、このキャラクターに既存のアクティビティがあるかを確認します。
+    行動: ${text}
+    あなたの行動と感情を、Obsidianのデイリーノートに保存してください。
+    ファイルには、必ず相対パスでアクセスしてください。
     `;
 
 		await this.run(prompt, {

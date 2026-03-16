@@ -1,7 +1,7 @@
 {
 	"defaultMode": "dontAsk",
 	"permissions": {
-		"deny": ["Agent"],
+		"deny": ["Agent", "Bash"],
 		"allow": [
 			"Read(/data/**)",
 			"Edit(/data/**)",
@@ -12,7 +12,7 @@
 			"WebFetch",
 			"Skill",
 			"mcp__discord__*",
-			"mcp__kirara__*"
+			"mcp__obsidian-mcp-server__*"
 		]
 	}
 }
